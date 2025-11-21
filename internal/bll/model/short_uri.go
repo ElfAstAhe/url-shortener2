@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/url"
 
-	errs "github.com/ElfAstAhe/url-shortener2/internal/bll/error"
+	errs "github.com/ElfAstAhe/url-shortener2/internal/error"
 	"github.com/google/uuid"
 )
 

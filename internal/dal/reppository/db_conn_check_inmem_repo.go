@@ -1,7 +1,7 @@
 package repository
 
 import (
-	errs "github.com/ElfAstAhe/url-shortener2/internal/dal/error"
+	errs "github.com/ElfAstAhe/url-shortener2/internal/error"
 )
 
 type DBConnCheckImMemRepo struct {
