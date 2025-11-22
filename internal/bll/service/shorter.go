@@ -1,15 +1,10 @@
 package service
 
-import "context"
+import (
+	"context"
 
-type CorrelationUrls map[string]string
-
-type CorrelationShorts map[string]string
-
-type UserShorts map[string]string
-
-// UserBatchDeletes key is user id values is short uri keys
-type UserBatchDeletes []string
+	"github.com/ElfAstAhe/url-shortener2/internal/bll/model"
+)
 
 // Shorter app service
 type Shorter interface {
@@ -22,11 +17,11 @@ type Shorter interface {
 	Store(ctx context.Context, url string) (string, error)
 
 	// BatchStore URLs and return correlation shorts
-	BatchStore(ctx context.Context, source CorrelationUrls) (CorrelationShorts, error)
+	BatchStore(ctx context.Context, source model.CorrelationUrls) (model.CorrelationShorts, error)
 
 	// GetAllUserShorts return all user shorten urls
-	GetAllUserShorts(ctx context.Context, userID string) (UserShorts, error)
+	GetAllUserShorts(ctx context.Context, userID string) (model.UserShorts, error)
 
 	// BatchDelete remove short uris by user id
-	BatchDelete(ctx context.Context, data UserBatchDeletes) error
+	BatchDelete(ctx context.Context, data model.UserBatchDeletes) error
 }

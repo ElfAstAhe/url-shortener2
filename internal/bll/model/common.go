@@ -6,6 +6,15 @@ import (
 	"net/url"
 )
 
+type CorrelationUrls map[string]string
+
+type CorrelationShorts map[string]string
+
+type UserShorts map[string]string
+
+// UserBatchDeletes key is user id values is short uri keys
+type UserBatchDeletes []string
+
 type CustomURL struct {
 	URL *url.URL
 }

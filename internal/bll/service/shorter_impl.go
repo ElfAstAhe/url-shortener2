@@ -91,9 +91,9 @@ func (s *ShorterImpl) Store(ctx context.Context, url string) (string, error) {
 	return res.Key, nil
 }
 
-func (s *ShorterImpl) BatchStore(ctx context.Context, source CorrelationUrls) (CorrelationShorts, error) {
+func (s *ShorterImpl) BatchStore(ctx context.Context, source model.CorrelationUrls) (model.CorrelationShorts, error) {
 	if len(source) == 0 {
-		return CorrelationShorts{}, nil
+		return make(model.CorrelationShorts), nil
 	}
 
 	userInfo, err := auth.UserInfoFromContext(ctx)
@@ -119,7 +119,7 @@ func (s *ShorterImpl) BatchStore(ctx context.Context, source CorrelationUrls) (C
 	return res, nil
 }
 
-func (s *ShorterImpl) GetAllUserShorts(ctx context.Context, userID string) (UserShorts, error) {
+func (s *ShorterImpl) GetAllUserShorts(ctx context.Context, userID string) (model.UserShorts, error) {
 	entities, err := s.shortURIRepo.ListAllByUser(ctx, userID)
 	if err != nil {
 		return nil, err
@@ -133,7 +133,7 @@ func (s *ShorterImpl) GetAllUserShorts(ctx context.Context, userID string) (User
 	return models, nil
 }
 
-func (s *ShorterImpl) BatchDelete(ctx context.Context, data UserBatchDeletes) error {
+func (s *ShorterImpl) BatchDelete(ctx context.Context, data model.UserBatchDeletes) error {
 	userInfo, err := auth.UserInfoFromContext(ctx)
 	if err != nil {
 		return err
@@ -144,7 +144,7 @@ func (s *ShorterImpl) BatchDelete(ctx context.Context, data UserBatchDeletes) er
 
 // ================
 
-func (s *ShorterImpl) toBatchSource(source CorrelationUrls) (map[string]*model.ShortURI, error) {
+func (s *ShorterImpl) toBatchSource(source model.CorrelationUrls) (map[string]*model.ShortURI, error) {
 	batch := make(map[string]*model.ShortURI)
 	for correlation, origURL := range source {
 		item, err := model.NewShortURI(origURL, utils.EncodeURIStr(origURL))
@@ -157,8 +157,8 @@ func (s *ShorterImpl) toBatchSource(source CorrelationUrls) (map[string]*model.S
 	return batch, nil
 }
 
-func (s *ShorterImpl) toBatchResult(source map[string]*model.ShortURI) (CorrelationShorts, error) {
-	batch := make(CorrelationShorts)
+func (s *ShorterImpl) toBatchResult(source map[string]*model.ShortURI) (model.CorrelationShorts, error) {
+	batch := make(model.CorrelationShorts)
 	for correlation, shortURL := range source {
 		batch[correlation] = utils.BuildNewURI(config.AppConfig.BaseURL, shortURL.Key)
 	}
@@ -166,11 +166,11 @@ func (s *ShorterImpl) toBatchResult(source map[string]*model.ShortURI) (Correlat
 	return batch, nil
 }
 
-func (s *ShorterImpl) toUserShorts(entities []*model.ShortURI) (UserShorts, error) {
+func (s *ShorterImpl) toUserShorts(entities []*model.ShortURI) (model.UserShorts, error) {
 	if len(entities) == 0 {
 		return nil, nil
 	}
-	res := make(UserShorts)
+	res := make(model.UserShorts)
 	for _, entity := range entities {
 		res[entity.OriginalURL.URL.String()] = utils.BuildNewURI(config.AppConfig.BaseURL, entity.Key)
 	}
