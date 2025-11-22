@@ -14,11 +14,13 @@ import (
 )
 
 type ShorterImpl struct {
+	baseURL      string
 	shortURIRepo repository.ShortURIRepository
 }
 
-func NewShorterService(shortURIRepo repository.ShortURIRepository) (*ShorterImpl, error) {
+func NewShorterService(config config.Config, shortURIRepo repository.ShortURIRepository) (*ShorterImpl, error) {
 	return &ShorterImpl{
+		baseURL:      config.BaseURL,
 		shortURIRepo: shortURIRepo,
 	}, nil
 }
@@ -160,7 +162,7 @@ func (s *ShorterImpl) toBatchSource(source model.CorrelationUrls) (map[string]*m
 func (s *ShorterImpl) toBatchResult(source map[string]*model.ShortURI) (model.CorrelationShorts, error) {
 	batch := make(model.CorrelationShorts)
 	for correlation, shortURL := range source {
-		batch[correlation] = utils.BuildNewURI(config.AppConfig.BaseURL, shortURL.Key)
+		batch[correlation] = utils.BuildNewURI(s.baseURL, shortURL.Key)
 	}
 
 	return batch, nil
@@ -172,7 +174,7 @@ func (s *ShorterImpl) toUserShorts(entities []*model.ShortURI) (model.UserShorts
 	}
 	res := make(model.UserShorts)
 	for _, entity := range entities {
-		res[entity.OriginalURL.URL.String()] = utils.BuildNewURI(config.AppConfig.BaseURL, entity.Key)
+		res[entity.OriginalURL.URL.String()] = utils.BuildNewURI(s.baseURL, entity.Key)
 	}
 
 	return res, nil
