@@ -35,13 +35,13 @@ const (
 	removeAllShortURIUserByShortURISQL string = `delete from short_uri_users where short_uri_id = $1`
 )
 
-func NewShortURIUserPgRepo(db db.DB) (*ShortURIUserPgRepo, error) {
-	if db == nil {
-		return nil, errors.New("db is nil")
+func NewShortURIUserPgRepo(appDB db.DB) (*ShortURIUserPgRepo, error) {
+	if appDB == nil {
+		return nil, errs.NewAppInvalidArgumentError("appDB", "nil")
 	}
 
 	return &ShortURIUserPgRepo{
-		db: db,
+		db: appDB,
 	}, nil
 }
 

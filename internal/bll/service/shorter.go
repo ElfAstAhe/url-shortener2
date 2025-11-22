@@ -8,8 +8,6 @@ import (
 
 // Shorter app service
 type Shorter interface {
-	Close() error
-
 	// GetURL return full URL
 	GetURL(ctx context.Context, key string) (string, error)
 

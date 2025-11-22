@@ -13,23 +13,24 @@ import (
 	"github.com/ElfAstAhe/url-shortener2/internal/app/config/db"
 	irepo "github.com/ElfAstAhe/url-shortener2/internal/bll/repository"
 	"github.com/ElfAstAhe/url-shortener2/internal/bll/service"
+	"github.com/ElfAstAhe/url-shortener2/internal/dal/repository"
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/handler"
 	"github.com/ElfAstAhe/url-shortener2/pkg/logger"
 	migrations "github.com/ElfAstAhe/url-shortener2/pkg/migrations/goose"
 )
 
 type App struct {
-	ctx             context.Context
-	cancelFunc      context.CancelFunc
-	WG              sync.WaitGroup
-	db              db.DB
-	conf            *config.Config
-	Log             logger.Logger
-	shorURIUserRepo irepo.ShortURIUserRepository
-	shortURIRepo    irepo.ShortURIRepository
-	shorterService  service.Shorter
-	router          handler.AppRouter
-	httpServer      *http.Server
+	ctx              context.Context
+	cancelFunc       context.CancelFunc
+	WG               sync.WaitGroup
+	db               db.DB
+	conf             *config.Config
+	Log              logger.Logger
+	shortURIUserRepo irepo.ShortURIUserRepository
+	shortURIRepo     irepo.ShortURIRepository
+	shorterService   service.Shorter
+	router           handler.AppRouter
+	httpServer       *http.Server
 }
 
 func NewApp() *App {
@@ -42,45 +43,45 @@ func NewApp() *App {
 }
 
 func (app *App) Init() error {
-	logger := app.Log.GetLogger("app")
+	log := app.Log.GetLogger("init")
 	//    defer _utl.CloseOnly(logger.(io.Closer))
 
-	logger.Info("loading config")
+	log.Info("loading config")
 	if err := app.loadConfig(); err != nil {
 		return err
 	}
 
-	logger.Info("initializing logger")
+	log.Info("initializing logger")
 	if err := app.initLogger(); err != nil {
 		return err
 	}
 
-	logger.Info("initializing database")
+	log.Info("initializing database")
 	if err := app.initDatabase(); err != nil {
 		return err
 	}
 
-	logger.Info("migrate database")
+	log.Info("migrate database")
 	if err := app.migrateDatabase(); err != nil {
 		return err
 	}
 
-	logger.Info("initializing dependencies")
+	log.Info("initializing dependencies")
 	if err := app.initDependencies(); err != nil {
 		return err
 	}
 
-	logger.Info("initializing startup services")
+	log.Info("initializing startup services")
 	if err := app.initStartupServices(); err != nil {
 		return err
 	}
 
-	logger.Info("initializing http server handlers")
+	log.Info("initializing http server handlers")
 	if err := app.initRouter(); err != nil {
 		return err
 	}
 
-	logger.Info("initializing http server")
+	log.Info("initializing http server")
 	if err := app.initHTTPServer(); err != nil {
 		return err
 	}
@@ -89,7 +90,7 @@ func (app *App) Init() error {
 }
 
 func (app *App) Run() error {
-	log := app.Log.GetLogger("app run")
+	log := app.Log.GetLogger("run")
 	//    defer _utl.CloseOnly(logger.(io.Closer))
 	log.Info("Starting graceful shutdown go routine...")
 	app.WG.Add(1)
@@ -166,9 +167,20 @@ func (app *App) migrateDatabase() error {
 }
 
 func (app *App) initDependencies() error {
+	var err error
 	// repositories
+	if app.shortURIUserRepo, err = app.createShortURIUserRepo(); err != nil {
+		return err
+	}
+	if app.shortURIRepo, err = app.createShortURIRepo(app.shortURIUserRepo); err != nil {
+		return err
+	}
+
 	// services
+	app.shorterService = service.NewShorterService(app.conf, app.shortURIRepo)
+
 	// facades
+	// ..
 
 	return nil
 }
@@ -214,9 +226,25 @@ func (app *App) gracefulShutdown() {
 		}
 	}
 
-	if err := app.httpServer.Shutdown(app.ctx); err != nil {
+	if err := app.httpServer.Shutdown(context.Background()); err != nil {
 		app.Log.Errorf("error graceful shutdown http server with error [%v]", err)
 	}
 
 	app.WG.Done()
+}
+
+func (app *App) createShortURIUserRepo() (irepo.ShortURIUserRepository, error) {
+	if app.db.GetDBKind() == config.DBKindPostgres {
+		return repository.NewShortURIUserPgRepo(app.db)
+	}
+
+	return repository.NewShortURIUserInMemRepo(app.db)
+}
+
+func (app *App) createShortURIRepo(shortURIUserRepo irepo.ShortURIUserRepository) (irepo.ShortURIRepository, error) {
+	if app.db.GetDBKind() == config.DBKindPostgres {
+		return repository.NewShortURIPgRepo(app.db, shortURIUserRepo)
+	}
+
+	return repository.NewShortURIInMemRepo(app.db, shortURIUserRepo)
 }

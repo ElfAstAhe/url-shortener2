@@ -18,11 +18,11 @@ type ShorterImpl struct {
 	shortURIRepo repository.ShortURIRepository
 }
 
-func NewShorterService(config config.Config, shortURIRepo repository.ShortURIRepository) (*ShorterImpl, error) {
+func NewShorterService(config *config.Config, shortURIRepo repository.ShortURIRepository) *ShorterImpl {
 	return &ShorterImpl{
 		baseURL:      config.BaseURL,
 		shortURIRepo: shortURIRepo,
-	}, nil
+	}
 }
 
 // ShorterService
