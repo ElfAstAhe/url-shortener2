@@ -181,6 +181,7 @@ func (app *App) initDependencies() error {
 
 	// facades
 	// ..
+	// ..
 
 	return nil
 }
