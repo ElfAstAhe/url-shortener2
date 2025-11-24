@@ -32,8 +32,8 @@ func (pgr *DBConnCheckPgRepo) Close() error {
 
 // DBConn
 
-func (pgr *DBConnCheckPgRepo) CheckDBConn() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+func (pgr *DBConnCheckPgRepo) CheckDBConn(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
 
 	return pgr.DB.GetDB().PingContext(ctx)

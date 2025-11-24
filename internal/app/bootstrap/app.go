@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
 
@@ -13,7 +14,8 @@ import (
 	"github.com/ElfAstAhe/url-shortener2/internal/app/config/db"
 	irepo "github.com/ElfAstAhe/url-shortener2/internal/bll/repository"
 	"github.com/ElfAstAhe/url-shortener2/internal/bll/service"
-	"github.com/ElfAstAhe/url-shortener2/internal/dal/repository"
+	"github.com/ElfAstAhe/url-shortener2/internal/bll/service/audit"
+	"github.com/ElfAstAhe/url-shortener2/internal/ep/facade"
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/handler"
 	"github.com/ElfAstAhe/url-shortener2/pkg/logger"
 	migrations "github.com/ElfAstAhe/url-shortener2/pkg/migrations/goose"
@@ -26,9 +28,13 @@ type App struct {
 	db               db.DB
 	conf             *config.Config
 	Log              logger.Logger
+	connCheckRepo    irepo.DBConnCheckRepository
 	shortURIUserRepo irepo.ShortURIUserRepository
 	shortURIRepo     irepo.ShortURIRepository
 	shorterService   service.Shorter
+	toolFacade       facade.ToolFacade
+	authFacade       facade.AuthFacade
+	shortenFacade    facade.ShortenFacade
 	router           handler.AppRouter
 	httpServer       *http.Server
 }
@@ -169,6 +175,9 @@ func (app *App) migrateDatabase() error {
 func (app *App) initDependencies() error {
 	var err error
 	// repositories
+	if app.connCheckRepo, err = app.createConnCheckRepo(); err != nil {
+		return err
+	}
 	if app.shortURIUserRepo, err = app.createShortURIUserRepo(); err != nil {
 		return err
 	}
@@ -180,8 +189,9 @@ func (app *App) initDependencies() error {
 	app.shorterService = service.NewShorterService(app.conf, app.shortURIRepo)
 
 	// facades
-	// ..
-	// ..
+	app.toolFacade = facade.NewToolFacadeImpl(app.connCheckRepo)
+	//	app.authFacade = facade.NewAuthFacadeImpl()
+	//	app.shortenFacade = facade.NewShortenFacadeImpl()
 
 	return nil
 }
@@ -193,10 +203,34 @@ func (app *App) initStartupServices() error {
 }
 
 func (app *App) initRouter() error {
-	// ToDo: implement
-	//    app.router = handler.NewChiRouter(app.conf, .., app.log)
+	// observers
+	observers, err := app.initIncomeObservers()
+	if err != nil {
+		return err
+	}
+
+	app.router = handler.NewAppChiRouter(app.toolFacade, app.authFacade, app.shortenFacade, observers, app.conf, app.Log)
 
 	return nil
+}
+
+func (app *App) initIncomeObservers() ([]audit.IncomeObserver, error) {
+	res := make([]audit.IncomeObserver, 0)
+	// local
+	if strings.TrimSpace(app.conf.AuditFile) != "" {
+		localIncomeObserver, err := audit.NewIncomeLocalService(app.conf)
+		if err != nil {
+			return nil, err
+		}
+
+		res = append(res, localIncomeObserver)
+	}
+	// remote
+	if strings.TrimSpace(app.conf.AuditURL) != "" {
+		res = append(res, audit.NewIncomeRemoteService(app.conf))
+	}
+
+	return res, nil
 }
 
 func (app *App) initHTTPServer() error {
@@ -232,20 +266,4 @@ func (app *App) gracefulShutdown() {
 	}
 
 	app.WG.Done()
-}
-
-func (app *App) createShortURIUserRepo() (irepo.ShortURIUserRepository, error) {
-	if app.db.GetDBKind() == config.DBKindPostgres {
-		return repository.NewShortURIUserPgRepo(app.db)
-	}
-
-	return repository.NewShortURIUserInMemRepo(app.db)
-}
-
-func (app *App) createShortURIRepo(shortURIUserRepo irepo.ShortURIUserRepository) (irepo.ShortURIRepository, error) {
-	if app.db.GetDBKind() == config.DBKindPostgres {
-		return repository.NewShortURIPgRepo(app.db, shortURIUserRepo)
-	}
-
-	return repository.NewShortURIInMemRepo(app.db, shortURIUserRepo)
 }

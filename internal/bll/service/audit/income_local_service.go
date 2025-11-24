@@ -12,7 +12,7 @@ type IncomeLocalService struct {
 	storage *storage.IncomeAuditStorageWriter
 }
 
-func NewIncomeLocalService(appConfig config.Config) (*IncomeLocalService, error) {
+func NewIncomeLocalService(appConfig *config.Config) (*IncomeLocalService, error) {
 	auditStorage, err := storage.NewIncomeAuditStorageWriter(appConfig.AuditFile)
 	if err != nil {
 		return nil, err

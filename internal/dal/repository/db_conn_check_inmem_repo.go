@@ -1,5 +1,7 @@
 package repository
 
+import "context"
+
 type DBConnCheckImMemRepo struct {
 }
 
@@ -7,8 +9,7 @@ func NewDBConnCheckImMemRepo() (*DBConnCheckImMemRepo, error) {
 	return &DBConnCheckImMemRepo{}, nil
 }
 
-func (D *DBConnCheckImMemRepo) CheckDBConn() error {
-	//    return errs.NewDalDBConnCheckError("IN_MEMORY DB, where is no connection")
+func (D *DBConnCheckImMemRepo) CheckDBConn(ctx context.Context) error {
 	return nil
 }
 

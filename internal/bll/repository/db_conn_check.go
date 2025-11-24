@@ -1,6 +1,8 @@
 package repository
 
+import "context"
+
 type DBConnCheckRepository interface {
-	CheckDBConn() error
+	CheckDBConn(ctx context.Context) error
 	Close() error
 }

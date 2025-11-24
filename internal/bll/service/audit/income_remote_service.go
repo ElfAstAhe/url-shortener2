@@ -13,7 +13,7 @@ type IncomeRemoteService struct {
 	client audit.IncomeClient
 }
 
-func NewIncomeRemoteService(appConfig config.Config) *IncomeRemoteService {
+func NewIncomeRemoteService(appConfig *config.Config) *IncomeRemoteService {
 	return &IncomeRemoteService{
 		client: audit.NewSimpleClient(appConfig.AuditURL, 3*time.Second),
 	}
