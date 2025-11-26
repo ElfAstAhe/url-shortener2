@@ -49,7 +49,7 @@ func NewApp() *App {
 }
 
 func (app *App) Init() error {
-	log := app.Log.GetLogger("init")
+	log := app.Log.GetLogger("bootstrap init")
 	//    defer _utl.CloseOnly(logger.(io.Closer))
 
 	log.Info("loading config")
@@ -57,12 +57,12 @@ func (app *App) Init() error {
 		return err
 	}
 
-	log.Info("initializing logger")
+	log.Info("init logger")
 	if err := app.initLogger(); err != nil {
 		return err
 	}
 
-	log.Info("initializing database")
+	log.Info("init database")
 	if err := app.initDatabase(); err != nil {
 		return err
 	}
@@ -72,22 +72,27 @@ func (app *App) Init() error {
 		return err
 	}
 
-	log.Info("initializing dependencies")
+	log.Info("load im mem data")
+	if err := app.loadInMemData(); err != nil {
+		return err
+	}
+
+	log.Info("init dependencies")
 	if err := app.initDependencies(); err != nil {
 		return err
 	}
 
-	log.Info("initializing startup services")
+	log.Info("init startup services")
 	if err := app.initStartupServices(); err != nil {
 		return err
 	}
 
-	log.Info("initializing http server handlers")
+	log.Info("init http router")
 	if err := app.initRouter(); err != nil {
 		return err
 	}
 
-	log.Info("initializing http server")
+	log.Info("init http server")
 	if err := app.initHTTPServer(); err != nil {
 		return err
 	}
@@ -96,13 +101,13 @@ func (app *App) Init() error {
 }
 
 func (app *App) Run() error {
-	log := app.Log.GetLogger("run")
+	log := app.Log.GetLogger("bootstrap run")
 	//    defer _utl.CloseOnly(logger.(io.Closer))
-	log.Info("Starting graceful shutdown go routine...")
+	log.Info("start graceful shutdown go routine...")
 	app.WG.Add(1)
 	go app.gracefulShutdown()
 
-	log.Info("Starting server...")
+	log.Info("start server...")
 	if err := app.httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Errorf("Error starting server with error [%v]", err)
 
@@ -113,11 +118,15 @@ func (app *App) Run() error {
 }
 
 func (app *App) Close() error {
+	log := app.Log.GetLogger("bootstrap close")
+
+	log.Info("close db connection")
 	if err := db.CloseDB(app.db); err != nil {
 		return err
 	}
 
-	if err := app.Log.Close(); err != nil {
+	log.Info("save in mem data")
+	if err := app.saveInMemData(); err != nil {
 		return err
 	}
 
@@ -146,7 +155,7 @@ func (app *App) initLogger() error {
 }
 
 func (app *App) initDatabase() error {
-	res, err := db.NewDB(app.db.GetDBKind(), app.conf.DBDsn)
+	res, err := db.NewDB(app.conf.DBKind, app.conf.DBDsn)
 	if err != nil {
 		return err
 	}
@@ -156,17 +165,52 @@ func (app *App) initDatabase() error {
 }
 
 func (app *App) migrateDatabase() error {
-	migrator, err := migrations.NewGooseDBMigrator(app.ctx, app.db.GetDB(), app.Log)
-	if err != nil {
-		return err
+	if app.db.GetDBKind() == config.DBKindPostgres {
+		migrator, err := migrations.NewGooseDBMigrator(app.ctx, app.db.GetDB(), app.Log)
+		if err != nil {
+			return err
+		}
+
+		if err := migrator.Initialize(); err != nil {
+			return err
+		}
+
+		if err := migrator.Up(); err != nil {
+			return err
+		}
 	}
 
-	if err := migrator.Initialize(); err != nil {
-		return err
+	return nil
+}
+
+func (app *App) loadInMemData() error {
+	if cache, ok := app.db.(db.InMemoryCache); ok {
+		log := app.Log.GetLogger("inMem")
+		log.Info("Load data from storage...")
+		if err := app.loadShortURIData(app.conf.StoragePath, cache); err != nil {
+			log.Errorf("Error loading data: [%v]", err)
+			log.Warn("Using empty data storage")
+		}
+
+		log.Info("Load data from storage user...")
+		if err := app.loadShortURIUserData(app.conf.StorageUserPath, cache); err != nil {
+			log.Errorf("Error loading data: [%v]", err)
+			log.Warn("Using empty data storage")
+		}
 	}
 
-	if err := migrator.Up(); err != nil {
-		return err
+	return nil
+}
+
+func (app *App) saveInMemData() error {
+	log := app.Log.GetLogger("inMem")
+	if cache, ok := app.db.(db.InMemoryCache); ok {
+		if err := app.saveShortURIData(config.AppConfig.StoragePath, cache); err != nil {
+			log.Errorf("error save shortURI data: [%v]", err)
+		}
+		if err := app.saveShortURIUserData(config.AppConfig.StorageUserPath, cache); err != nil {
+			log.Errorf("error save shortURI user data: [%v]", err)
+		}
 	}
 
 	return nil
