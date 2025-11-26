@@ -22,9 +22,10 @@ type AppChiRouter struct {
 	toolFacade    facade.ToolFacade
 	authFacade    facade.AuthFacade
 	shortenFacade facade.ShortenFacade
+	userFacade    facade.UserFacade
 }
 
-func NewAppChiRouter(toolFacade facade.ToolFacade, authFacade facade.AuthFacade, shortenFacade facade.ShortenFacade, observers []auditservice.IncomeObserver, conf *config.Config, logger logger.Logger) *AppChiRouter {
+func NewAppChiRouter(toolFacade facade.ToolFacade, authFacade facade.AuthFacade, shortenFacade facade.ShortenFacade, userFacade facade.UserFacade, observers []auditservice.IncomeObserver, conf *config.Config, logger logger.Logger) *AppChiRouter {
 	res := &AppChiRouter{
 		router:        chi.NewRouter(),
 		log:           logger.GetLogger("app router"),
@@ -32,6 +33,7 @@ func NewAppChiRouter(toolFacade facade.ToolFacade, authFacade facade.AuthFacade,
 		toolFacade:    toolFacade,
 		authFacade:    authFacade,
 		shortenFacade: shortenFacade,
+		userFacade:    userFacade,
 	}
 
 	res.setupMiddleware(observers, logger)

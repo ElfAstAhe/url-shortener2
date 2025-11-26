@@ -21,5 +21,5 @@ type Shorter interface {
 	GetAllUserShorts(ctx context.Context, userID string) (model.UserShorts, error)
 
 	// BatchDelete remove short uris by user id
-	BatchDelete(ctx context.Context, data model.UserBatchDeletes) error
+	BatchDelete(ctx context.Context, userID string, data model.UserBatchDeletes) error
 }

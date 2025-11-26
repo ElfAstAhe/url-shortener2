@@ -1,7 +1,33 @@
 package handler
 
-import "net/http"
+import (
+	"net/http"
 
-func (cr *AppChiRouter) deleteAPIUserUrls(w http.ResponseWriter, r *http.Request) {
+	"github.com/ElfAstAhe/url-shortener2/internal/utils"
+)
 
+func (cr *AppChiRouter) deleteAPIUserUrls(rw http.ResponseWriter, r *http.Request) {
+	cr.log.Debug("deleteAPIUserUrls start")
+	defer cr.log.Debug("deleteAPIUserUrls end")
+
+	if !cr.hasUserInfo(r.Context()) {
+		// 401
+		http.Error(rw, "Unauthorized", http.StatusUnauthorized)
+
+		return
+	}
+
+	go cr.batchDeleteAsync(r)
+
+	// 202
+	rw.WriteHeader(http.StatusAccepted)
+}
+
+func (cr *AppChiRouter) batchDeleteAsync(r *http.Request) {
+	defer utils.CloseOnly(r.Body)
+
+	err := cr.userFacade.BatchDelete(r.Context(), r.Body)
+	if err != nil {
+		cr.log.Errorf("error batchDeleteAsync with [%v]", err)
+	}
 }

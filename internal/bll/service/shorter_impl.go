@@ -135,13 +135,8 @@ func (s *ShorterImpl) GetAllUserShorts(ctx context.Context, userID string) (mode
 	return models, nil
 }
 
-func (s *ShorterImpl) BatchDelete(ctx context.Context, data model.UserBatchDeletes) error {
-	userInfo, err := auth.UserInfoFromContext(ctx)
-	if err != nil {
-		return err
-	}
-
-	return s.shortURIRepo.BatchDeleteByKeys(ctx, userInfo.UserID, data)
+func (s *ShorterImpl) BatchDelete(ctx context.Context, userID string, data model.UserBatchDeletes) error {
+	return s.shortURIRepo.BatchDeleteByKeys(ctx, userID, data)
 }
 
 // ================

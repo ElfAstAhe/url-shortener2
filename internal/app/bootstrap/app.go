@@ -32,6 +32,7 @@ type App struct {
 	toolFacade       facade.ToolFacade
 	authFacade       facade.AuthFacade
 	shortenFacade    facade.ShortenFacade
+	userFacade       facade.UserFacade
 	router           handler.AppRouter
 	httpServer       *http.Server
 }
