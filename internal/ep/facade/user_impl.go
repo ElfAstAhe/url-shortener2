@@ -45,3 +45,17 @@ func (uf *UserFacadeImpl) BatchDelete(ctx context.Context, rawData io.Reader) er
 
 	return uf.shortenService.BatchDelete(ctx, userInfo.UserID, incomeData)
 }
+
+func (uf *UserFacadeImpl) ListAllShortens(ctx context.Context) ([]*dto.UserShorten, error) {
+	userInfo, err := auth.UserInfoFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	modelData, err := uf.shortenService.GetAllUserShorts(ctx, userInfo.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	return mapper.UserShortensFromModel(modelData)
+}
