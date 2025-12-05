@@ -75,9 +75,13 @@ func (cr *AppChiRouter) setupMiddleware(observers []auditservice.IncomeObserver,
 func (cr *AppChiRouter) setupRoutes() {
 	// root
 	cr.router.Route("/", func(r chi.Router) {
-		r.Get("/{key}", cr.getRoot)    // GET /{key}
-		r.Post("/", cr.postRoot)       // POST /
-		r.Get("/ping", cr.getRootPing) // GET /ping
+		r.Get("/{key}", cr.getRoot) // GET /{key}
+		r.Post("/", cr.postRoot)    // POST /
+
+		// ping sub-router
+		r.Route("/ping", func(r chi.Router) {
+			r.Get("/", cr.getPing) // GET /ping
+		})
 
 		// api sub-router
 		r.Route("/api", func(r chi.Router) {

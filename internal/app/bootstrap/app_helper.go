@@ -120,7 +120,7 @@ func (app *App) initDependencies() error {
 	// facades
 	app.toolFacade = facade.NewToolFacadeImpl(app.connCheckRepo)
 	//	app.authFacade = facade.NewAuthFacadeImpl()
-	//	app.shortenFacade = facade.NewShortenFacadeImpl()
+	app.shortenFacade = facade.NewShortenFacadeImpl(app.shorterService)
 	app.userFacade = facade.NewUserFacadeImpl(app.shorterService, app.Log)
 
 	return nil

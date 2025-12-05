@@ -32,7 +32,7 @@ func (uf *UserFacadeImpl) BatchDelete(ctx context.Context, rawData io.Reader) er
 		return err
 	}
 	if userInfo == nil {
-		return errs.NewAuthUnauthorizedError("user info absent", err)
+		return errs.NewAuthInfoAbsentError("user info absent", nil)
 	}
 	var batchData = make(dto.ShortenBatchDeleteRequest, 0)
 	dec := json.NewDecoder(rawData)

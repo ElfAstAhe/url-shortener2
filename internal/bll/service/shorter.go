@@ -10,6 +10,7 @@ import (
 type Shorter interface {
 	// GetURL return full URL
 	GetURL(ctx context.Context, key string) (string, error)
+	GetURLUser(ctx context.Context, userID string, key string) (string, error)
 
 	// Store URL and return short key
 	Store(ctx context.Context, url string) (string, error)

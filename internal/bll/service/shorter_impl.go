@@ -2,13 +2,12 @@ package service
 
 import (
 	"context"
-	"errors"
+	"strings"
 
 	"github.com/ElfAstAhe/url-shortener2/internal/app/config"
 	"github.com/ElfAstAhe/url-shortener2/internal/bll/model"
 	"github.com/ElfAstAhe/url-shortener2/internal/bll/repository"
 	"github.com/ElfAstAhe/url-shortener2/internal/bll/service/auth"
-	apperrs "github.com/ElfAstAhe/url-shortener2/internal/error"
 	"github.com/ElfAstAhe/url-shortener2/internal/utils"
 	errs "github.com/ElfAstAhe/url-shortener2/pkg/error"
 )
@@ -28,19 +27,6 @@ func NewShorterService(config *config.Config, shortURIRepo repository.ShortURIRe
 // ShorterService
 
 func (s *ShorterImpl) GetURL(ctx context.Context, key string) (string, error) {
-	noAuthData, errNoAuth := s.getURLNoAuth(ctx, key)
-	_, errAuth := s.getURLAuth(ctx, key)
-	if errAuth != nil && errors.As(errAuth, &apperrs.DalSoftRemovedErr) {
-		return "", errAuth
-	}
-	if errNoAuth != nil {
-		return "", errNoAuth
-	}
-
-	return noAuthData, nil
-}
-
-func (s *ShorterImpl) getURLNoAuth(ctx context.Context, key string) (string, error) {
 	res, err := s.shortURIRepo.GetByKey(ctx, key)
 	if err != nil {
 		return "", err
@@ -52,15 +38,12 @@ func (s *ShorterImpl) getURLNoAuth(ctx context.Context, key string) (string, err
 	return res.OriginalURL.URL.String(), nil
 }
 
-func (s *ShorterImpl) getURLAuth(ctx context.Context, key string) (string, error) {
-	userInfo, err := auth.UserInfoFromContext(ctx)
-	if err != nil {
-		return "", err
+func (s *ShorterImpl) GetURLUser(ctx context.Context, userID string, key string) (string, error) {
+	if strings.TrimSpace(userID) == "" {
+		return "", errs.NewAppInvalidArgumentError("userID", "must not be empty")
 	}
-	if userInfo == nil {
-		return "", errs.NewAuthInfoAbsentError("getURLAuth internal service method", nil)
-	}
-	res, err := s.shortURIRepo.GetByKeyUser(ctx, userInfo.UserID, key)
+
+	res, err := s.shortURIRepo.GetByKeyUser(ctx, userID, key)
 	if err != nil {
 		return "", err
 	}
@@ -136,6 +119,10 @@ func (s *ShorterImpl) GetAllUserShorts(ctx context.Context, userID string) (mode
 }
 
 func (s *ShorterImpl) BatchDelete(ctx context.Context, userID string, data model.UserBatchDeletes) error {
+	if strings.TrimSpace(userID) == "" {
+		return errs.NewAppInvalidArgumentError("userID", "is required")
+	}
+
 	return s.shortURIRepo.BatchDeleteByKeys(ctx, userID, data)
 }
 
