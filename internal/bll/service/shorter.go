@@ -13,7 +13,7 @@ type Shorter interface {
 	GetURLUser(ctx context.Context, userID string, key string) (string, error)
 
 	// Store URL and return short key
-	Store(ctx context.Context, url string) (string, error)
+	Store(ctx context.Context, userID string, url string) (string, error)
 
 	// BatchStore URLs and return correlation shorts
 	BatchStore(ctx context.Context, source model.CorrelationUrls) (model.CorrelationShorts, error)

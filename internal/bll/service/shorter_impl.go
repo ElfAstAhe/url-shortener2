@@ -54,10 +54,9 @@ func (s *ShorterImpl) GetURLUser(ctx context.Context, userID string, key string)
 	return res.OriginalURL.URL.String(), nil
 }
 
-func (s *ShorterImpl) Store(ctx context.Context, url string) (string, error) {
-	userInfo, err := auth.UserInfoFromContext(ctx)
-	if err != nil {
-		return "", err
+func (s *ShorterImpl) Store(ctx context.Context, userID string, url string) (string, error) {
+	if strings.TrimSpace(userID) == "" {
+		return "", errs.NewAuthInfoAbsentError("user id absent", nil)
 	}
 
 	key := utils.EncodeURIStr(url)
@@ -66,7 +65,7 @@ func (s *ShorterImpl) Store(ctx context.Context, url string) (string, error) {
 		return "", err
 	}
 
-	res, err = s.shortURIRepo.Create(ctx, userInfo.UserID, res)
+	res, err = s.shortURIRepo.Create(ctx, userID, res)
 	if err != nil && res == nil {
 		return "", err
 	} else if err != nil {
