@@ -81,6 +81,10 @@ func (sf *ShortenFacadeImpl) CreateURL(ctx context.Context, req *http.Request) (
 	return res, nil
 }
 
+func (sf *ShortenFacadeImpl) BatchCreateURL(ctx context.Context, r *http.Request) ([]*dto.ShortenBatchResponseItem, error) {
+	// ToDo: implement
+}
+
 func (sf *ShortenFacadeImpl) getCRFromRequest(req *http.Request) (*dto.ShortenCreateRequest, error) {
 	defer utils.CloseOnly(req.Body)
 	dec := json.NewDecoder(req.Body)

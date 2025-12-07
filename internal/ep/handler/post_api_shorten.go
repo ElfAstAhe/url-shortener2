@@ -10,6 +10,9 @@ import (
 )
 
 func (cr *AppChiRouter) postAPIShorten(rw http.ResponseWriter, r *http.Request) {
+	cr.log.Info("postAPIShorten start")
+	defer cr.log.Info("postAPIShorten finish")
+
 	res, err := cr.shortenFacade.CreateURL(r.Context(), r)
 	if err != nil {
 		// 400
