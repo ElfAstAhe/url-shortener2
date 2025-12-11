@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 
+	"github.com/ElfAstAhe/url-shortener2/internal/bll/service/auth"
 	"github.com/ElfAstAhe/url-shortener2/internal/utils"
 )
 
@@ -10,7 +11,7 @@ func (cr *AppChiRouter) deleteAPIUserUrls(rw http.ResponseWriter, r *http.Reques
 	cr.log.Debug("deleteAPIUserUrls start")
 	defer cr.log.Debug("deleteAPIUserUrls end")
 
-	if !cr.hasUserInfo(r.Context()) {
+	if !auth.HasUserInfoInRequest(r) {
 		// 401
 		http.Error(rw, "Unauthorized", http.StatusUnauthorized)
 

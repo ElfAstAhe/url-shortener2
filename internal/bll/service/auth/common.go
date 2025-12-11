@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	errs "github.com/ElfAstAhe/url-shortener2/pkg/error"
 	"github.com/google/uuid"
@@ -48,6 +49,23 @@ func UserInfoFromContext(ctx context.Context) (*UserInfo, error) {
 	}
 
 	return nil, errs.NewAuthInfoAbsentError("user info not found in context", nil)
+}
+
+func HasUserInfoInContext(ctx context.Context) bool {
+	userInfo, err := UserInfoFromContext(ctx)
+	if err != nil {
+		return false
+	}
+
+	return userInfo != nil
+}
+
+func HasUserInfoInRequest(r *http.Request) bool {
+	if r == nil {
+		return false
+	}
+
+	return HasUserInfoInContext(r.Context())
 }
 
 func BuildRandomUserInfo() *UserInfo {
