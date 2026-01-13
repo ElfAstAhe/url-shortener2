@@ -49,7 +49,9 @@ func (cr *AppChiRouter) GetRouter() http.Handler {
 func (cr *AppChiRouter) setupMiddleware(observers []auditservice.IncomeObserver, logger logger.Logger) {
 	// dev income request audit
 	cr.router.Use(audit.NewDevIncomeMiddleware(logger, true).Handle)
-	// jwt
+	// jwt auth iter14
+	// ..
+	// jwt auth
 	// ..
 	// requestID
 	cr.router.Use(middleware.RequestID)

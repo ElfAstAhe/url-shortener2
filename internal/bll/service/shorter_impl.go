@@ -8,6 +8,7 @@ import (
 	"github.com/ElfAstAhe/url-shortener2/internal/bll/model"
 	"github.com/ElfAstAhe/url-shortener2/internal/bll/repository"
 	"github.com/ElfAstAhe/url-shortener2/internal/bll/service/auth"
+	apperrs "github.com/ElfAstAhe/url-shortener2/internal/error"
 	"github.com/ElfAstAhe/url-shortener2/internal/utils"
 	errs "github.com/ElfAstAhe/url-shortener2/pkg/error"
 )
@@ -69,7 +70,7 @@ func (s *ShorterImpl) Store(ctx context.Context, userID string, url string) (str
 	if err != nil && res == nil {
 		return "", err
 	} else if err != nil {
-		return res.Key, err
+		return res.Key, apperrs.NewBllConflictErrorEx(res.Key, err)
 	}
 
 	return res.Key, nil

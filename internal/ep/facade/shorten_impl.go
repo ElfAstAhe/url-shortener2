@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
+	"strings"
 
 	"github.com/ElfAstAhe/url-shortener2/internal/bll/service"
 	"github.com/ElfAstAhe/url-shortener2/internal/bll/service/auth"
@@ -83,6 +85,33 @@ func (sf *ShortenFacadeImpl) CreateURL(ctx context.Context, req *http.Request) (
 
 func (sf *ShortenFacadeImpl) BatchCreateURL(ctx context.Context, r *http.Request) ([]*dto.ShortenBatchResponseItem, error) {
 	// ToDo: implement
+
+	return nil, errors.New("not implemented")
+}
+
+func (sf *ShortenFacadeImpl) Store(ctx context.Context, r *http.Request) (string, error) {
+	userInfo, err := auth.UserInfoFromContext(ctx)
+	if err != nil {
+		return "", err
+	}
+	defer utils.CloseOnly(r.Body)
+
+	data, err := io.ReadAll(r.Body)
+	if err != nil {
+		return "", err
+	}
+
+	key, err := sf.service.Store(ctx, userInfo.UserID, string(data))
+	if err != nil {
+		return key, err
+	}
+
+	res, err := mapper.ShortenCreateResponseFromKey(key)
+	if err != nil {
+		return "", err
+	}
+
+	return res.Result, nil
 }
 
 func (sf *ShortenFacadeImpl) getCRFromRequest(req *http.Request) (*dto.ShortenCreateRequest, error) {
@@ -98,8 +127,12 @@ func (sf *ShortenFacadeImpl) getCRFromRequest(req *http.Request) (*dto.ShortenCr
 }
 
 func (sf *ShortenFacadeImpl) validateCR(cr *dto.ShortenCreateRequest) error {
-	if cr.URL == "" {
-		return errs.NewAppInvalidArgumentError("cr", "url is required")
+	return sf.validate("cr", cr.URL)
+}
+
+func (sf *ShortenFacadeImpl) validate(param string, data string) error {
+	if strings.TrimSpace(data) == "" {
+		return errs.NewAppInvalidArgumentError(param, "url is required")
 	}
 
 	return nil

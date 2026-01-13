@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"time"
 
+	utl "github.com/ElfAstAhe/url-shortener2/internal/utils"
 	"github.com/ElfAstAhe/url-shortener2/pkg/client/audit/dto"
 	"github.com/ElfAstAhe/url-shortener2/pkg/utils"
 )
@@ -43,11 +44,13 @@ func (client *SimpleClient) AuditIncome(ctx context.Context, data *dto.IncomeAud
 	if err != nil {
 		return NewClientError("Error creating request", err)
 	}
+	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := client.client.Do(req)
 	if err != nil {
 		return NewClientError("Error sending request", err)
 	}
+	defer utl.CloseOnly(resp.Body)
 
 	if !utils.IsSuccess(resp.StatusCode) {
 		return NewClientError(fmt.Sprintf("Error in response with status code [%v]", resp.StatusCode), nil)
