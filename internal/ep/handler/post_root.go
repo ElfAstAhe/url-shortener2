@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	apperrs "github.com/ElfAstAhe/url-shortener2/internal/error"
+	"github.com/ElfAstAhe/url-shortener2/internal/utils"
 	"go.uber.org/zap"
 )
 
@@ -12,7 +13,9 @@ func (cr *AppChiRouter) postRoot(rw http.ResponseWriter, r *http.Request) {
 	cr.log.Info("postAPIShortenBatch start")
 	defer cr.log.Info("postAPIShortenBatch finish")
 
-	res, err := cr.shortenFacade.Store(r.Context(), r)
+	defer utils.CloseOnly(r.Body)
+
+	res, err := cr.shortenFacade.Store(r.Context(), r.Body)
 	if err != nil && !errors.As(err, &apperrs.BllConflictErr) {
 		// 500
 		http.Error(rw, err.Error(), http.StatusInternalServerError)

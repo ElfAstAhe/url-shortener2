@@ -13,7 +13,6 @@ import (
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/dto"
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/mapper"
 	apperrs "github.com/ElfAstAhe/url-shortener2/internal/error"
-	"github.com/ElfAstAhe/url-shortener2/internal/utils"
 	errs "github.com/ElfAstAhe/url-shortener2/pkg/error"
 	"github.com/go-chi/chi/v5"
 )
@@ -54,13 +53,13 @@ func (sf *ShortenFacadeImpl) GetURL(ctx context.Context, req *http.Request) (str
 	return data, errUser
 }
 
-func (sf *ShortenFacadeImpl) CreateURL(ctx context.Context, req *http.Request) (*dto.ShortenCreateResponse, error) {
+func (sf *ShortenFacadeImpl) CreateURL(ctx context.Context, income io.Reader) (*dto.ShortenCreateResponse, error) {
 	userInfo, err := auth.UserInfoFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	cr, err := sf.getCRFromRequest(req)
+	cr, err := sf.getCRFromRequest(income)
 	if err != nil {
 		return nil, err
 	}
@@ -83,20 +82,19 @@ func (sf *ShortenFacadeImpl) CreateURL(ctx context.Context, req *http.Request) (
 	return res, nil
 }
 
-func (sf *ShortenFacadeImpl) BatchCreateURL(ctx context.Context, r *http.Request) ([]*dto.ShortenBatchResponseItem, error) {
+func (sf *ShortenFacadeImpl) BatchCreateURL(ctx context.Context, income io.Reader) ([]*dto.ShortenBatchResponseItem, error) {
 	// ToDo: implement
 
 	return nil, errors.New("not implemented")
 }
 
-func (sf *ShortenFacadeImpl) Store(ctx context.Context, r *http.Request) (string, error) {
+func (sf *ShortenFacadeImpl) Store(ctx context.Context, income io.Reader) (string, error) {
 	userInfo, err := auth.UserInfoFromContext(ctx)
 	if err != nil {
 		return "", err
 	}
-	defer utils.CloseOnly(r.Body)
 
-	data, err := io.ReadAll(r.Body)
+	data, err := io.ReadAll(income)
 	if err != nil {
 		return "", err
 	}
@@ -114,9 +112,8 @@ func (sf *ShortenFacadeImpl) Store(ctx context.Context, r *http.Request) (string
 	return res.Result, nil
 }
 
-func (sf *ShortenFacadeImpl) getCRFromRequest(req *http.Request) (*dto.ShortenCreateRequest, error) {
-	defer utils.CloseOnly(req.Body)
-	dec := json.NewDecoder(req.Body)
+func (sf *ShortenFacadeImpl) getCRFromRequest(income io.Reader) (*dto.ShortenCreateRequest, error) {
+	dec := json.NewDecoder(income)
 	var res = new(dto.ShortenCreateRequest)
 	err := dec.Decode(res)
 	if err != nil {

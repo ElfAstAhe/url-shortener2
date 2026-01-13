@@ -3,13 +3,17 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/ElfAstAhe/url-shortener2/internal/utils"
 )
 
 func (cr *AppChiRouter) postAPIShortenBatch(rw http.ResponseWriter, r *http.Request) {
 	cr.log.Info("postAPIShortenBatch start")
 	defer cr.log.Info("postAPIShortenBatch finish")
 
-	res, err := cr.shortenFacade.BatchCreateURL(r.Context(), r)
+	defer utils.CloseOnly(r.Body)
+
+	res, err := cr.shortenFacade.BatchCreateURL(r.Context(), r.Body)
 	if err != nil {
 		// 500
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
@@ -18,6 +22,7 @@ func (cr *AppChiRouter) postAPIShortenBatch(rw http.ResponseWriter, r *http.Requ
 	}
 
 	rw.Header().Set("Content-Type", "application/json")
+	// 201
 	rw.WriteHeader(http.StatusCreated)
 
 	enc := json.NewEncoder(rw)

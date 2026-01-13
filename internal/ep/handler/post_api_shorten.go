@@ -6,6 +6,8 @@ import (
 	"net/http"
 
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/dto"
+	apperrs "github.com/ElfAstAhe/url-shortener2/internal/error"
+	"github.com/ElfAstAhe/url-shortener2/internal/utils"
 	errs "github.com/ElfAstAhe/url-shortener2/pkg/error"
 )
 
@@ -13,7 +15,9 @@ func (cr *AppChiRouter) postAPIShorten(rw http.ResponseWriter, r *http.Request) 
 	cr.log.Info("postAPIShorten start")
 	defer cr.log.Info("postAPIShorten finish")
 
-	res, err := cr.shortenFacade.CreateURL(r.Context(), r)
+	defer utils.CloseOnly(r.Body)
+
+	res, err := cr.shortenFacade.CreateURL(r.Context(), r.Body)
 	if err != nil {
 		// 400
 		if errors.As(err, &errs.AppInvalidArgumentErr) {
@@ -23,7 +27,7 @@ func (cr *AppChiRouter) postAPIShorten(rw http.ResponseWriter, r *http.Request) 
 		}
 
 		// 409
-		if errors.As(err, &errs.ModelAlreadyExistsErr) {
+		if errors.As(err, &errs.ModelAlreadyExistsErr) || errors.As(err, &apperrs.BllConflictErr) {
 			cr.sendRespAPIShortenCreate(res, http.StatusConflict, rw)
 
 			return
