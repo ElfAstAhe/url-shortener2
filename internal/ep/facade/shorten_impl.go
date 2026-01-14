@@ -59,7 +59,7 @@ func (sf *ShortenFacadeImpl) CreateURL(ctx context.Context, income io.Reader) (*
 		return nil, err
 	}
 
-	cr, err := sf.getCRFromRequest(income)
+	cr, err := sf.getCRFromIncome(income)
 	if err != nil {
 		return nil, err
 	}
@@ -83,9 +83,32 @@ func (sf *ShortenFacadeImpl) CreateURL(ctx context.Context, income io.Reader) (*
 }
 
 func (sf *ShortenFacadeImpl) BatchCreateURL(ctx context.Context, income io.Reader) ([]*dto.ShortenBatchResponseItem, error) {
-	// ToDo: implement
+	userInfo, err := auth.UserInfoFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-	return nil, errors.New("not implemented")
+	incomeData, err := sf.getBatchFromIncome(income)
+	if err != nil {
+		return nil, err
+	}
+
+	serviceData, err := mapper.ShortenBatchFromDto(incomeData)
+	if err != nil {
+		return nil, err
+	}
+
+	serviceRes, err := sf.service.BatchStore(ctx, userInfo.UserID, serviceData)
+	if err != nil {
+		return nil, err
+	}
+
+	outcomeRes, err := mapper.ShortenBatchResponseFromKeys(serviceRes)
+	if err != nil {
+		return nil, err
+	}
+
+	return outcomeRes, nil
 }
 
 func (sf *ShortenFacadeImpl) Store(ctx context.Context, income io.Reader) (string, error) {
@@ -112,7 +135,7 @@ func (sf *ShortenFacadeImpl) Store(ctx context.Context, income io.Reader) (strin
 	return res.Result, nil
 }
 
-func (sf *ShortenFacadeImpl) getCRFromRequest(income io.Reader) (*dto.ShortenCreateRequest, error) {
+func (sf *ShortenFacadeImpl) getCRFromIncome(income io.Reader) (*dto.ShortenCreateRequest, error) {
 	dec := json.NewDecoder(income)
 	var res = new(dto.ShortenCreateRequest)
 	err := dec.Decode(res)
@@ -125,6 +148,16 @@ func (sf *ShortenFacadeImpl) getCRFromRequest(income io.Reader) (*dto.ShortenCre
 
 func (sf *ShortenFacadeImpl) validateCR(cr *dto.ShortenCreateRequest) error {
 	return sf.validate("cr", cr.URL)
+}
+
+func (sf *ShortenFacadeImpl) getBatchFromIncome(income io.Reader) ([]*dto.ShortenBatchCreateItem, error) {
+	dec := json.NewDecoder(income)
+	var data = make([]*dto.ShortenBatchCreateItem, 0)
+	if err := dec.Decode(&data); err != nil {
+		return nil, err
+	}
+
+	return data, nil
 }
 
 func (sf *ShortenFacadeImpl) validate(param string, data string) error {

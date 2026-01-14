@@ -7,7 +7,6 @@ import (
 	"github.com/ElfAstAhe/url-shortener2/internal/app/config"
 	"github.com/ElfAstAhe/url-shortener2/internal/bll/model"
 	"github.com/ElfAstAhe/url-shortener2/internal/bll/repository"
-	"github.com/ElfAstAhe/url-shortener2/internal/bll/service/auth"
 	apperrs "github.com/ElfAstAhe/url-shortener2/internal/error"
 	"github.com/ElfAstAhe/url-shortener2/internal/utils"
 	errs "github.com/ElfAstAhe/url-shortener2/pkg/error"
@@ -76,14 +75,13 @@ func (s *ShorterImpl) Store(ctx context.Context, userID string, url string) (str
 	return res.Key, nil
 }
 
-func (s *ShorterImpl) BatchStore(ctx context.Context, source model.CorrelationUrls) (model.CorrelationShorts, error) {
+func (s *ShorterImpl) BatchStore(ctx context.Context, userID string, source model.CorrelationUrls) (model.CorrelationShorts, error) {
 	if len(source) == 0 {
 		return make(model.CorrelationShorts), nil
 	}
 
-	userInfo, err := auth.UserInfoFromContext(ctx)
-	if err != nil {
-		return nil, err
+	if strings.TrimSpace(userID) == "" {
+		return nil, errs.NewAppInvalidArgumentError("userID", "must not be empty")
 	}
 
 	repoBatch, err := s.toBatchSource(source)
@@ -91,7 +89,7 @@ func (s *ShorterImpl) BatchStore(ctx context.Context, source model.CorrelationUr
 		return nil, err
 	}
 
-	batchRes, err := s.shortURIRepo.BatchCreate(ctx, userInfo.UserID, repoBatch)
+	batchRes, err := s.shortURIRepo.BatchCreate(ctx, userID, repoBatch)
 	if err != nil {
 		return nil, err
 	}

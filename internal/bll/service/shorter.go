@@ -16,7 +16,7 @@ type Shorter interface {
 	Store(ctx context.Context, userID string, url string) (string, error)
 
 	// BatchStore URLs and return correlation shorts
-	BatchStore(ctx context.Context, source model.CorrelationUrls) (model.CorrelationShorts, error)
+	BatchStore(ctx context.Context, userID string, source model.CorrelationUrls) (model.CorrelationShorts, error)
 
 	// GetAllUserShorts return all user shorten urls
 	GetAllUserShorts(ctx context.Context, userID string) (model.UserShorts, error)
