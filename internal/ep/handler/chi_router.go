@@ -9,6 +9,7 @@ import (
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/facade"
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/middleware/audit"
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/middleware/compress"
+	"github.com/ElfAstAhe/url-shortener2/internal/ep/middleware/iter14"
 	mwarelog "github.com/ElfAstAhe/url-shortener2/internal/ep/middleware/logger"
 	"github.com/ElfAstAhe/url-shortener2/pkg/logger"
 	"github.com/go-chi/chi/v5"
@@ -50,7 +51,7 @@ func (cr *AppChiRouter) setupMiddleware(observers []auditservice.IncomeObserver,
 	// dev income request audit
 	cr.router.Use(audit.NewDevIncomeMiddleware(logger, true).Handle)
 	// jwt auth iter14
-	// ..
+	cr.router.Use(iter14.NewJWTAuthIter14(nil, logger).Iter14Auth)
 	// jwt auth
 	// ..
 	// requestID
