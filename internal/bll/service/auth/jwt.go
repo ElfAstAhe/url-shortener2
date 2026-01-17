@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -28,7 +27,7 @@ var TestRoles Roles = []string{
 
 func NewJWTStringFromUserInfo(userInfo *UserInfo) (string, error) {
 	if userInfo == nil {
-		return "", errors.New("userInfo is nil")
+		return "", errs.NewAppInvalidArgumentError("userInfo", userInfo)
 	}
 
 	return NewJWTString(userInfo.Admin, userInfo.UserID, userInfo.User, userInfo.Roles...)
@@ -76,7 +75,7 @@ func retrieveJWT(r *http.Request) (*jwt.Token, error) {
 		return nil, errs.NewAuthCookieAbsentError(CookieName, nil)
 	}
 	if err := cookie.Valid(); err != nil {
-		return nil, errs.NewAuthCookieAbsentError("invalid cookie", err)
+		return nil, errs.NewAuthCookieInvalidError("invalid cookie", err)
 	}
 
 	claims := &AppClaims{}
@@ -88,7 +87,7 @@ func retrieveJWT(r *http.Request) (*jwt.Token, error) {
 		return []byte(secretKey), nil
 	})
 	if err != nil {
-		return nil, errs.NewAuthInfoAbsentError("error parsing token", err)
+		return nil, err
 	}
 
 	return token, nil
@@ -97,11 +96,11 @@ func retrieveJWT(r *http.Request) (*jwt.Token, error) {
 func UserInfoFromRequestJWT(r *http.Request) (*UserInfo, error) {
 	jwtToken, err := retrieveJWT(r)
 	if err != nil {
-		return nil, err
+		return nil, errs.NewAuthInfoAbsentError("invalid jwt", err)
 	}
 
 	if !jwtToken.Valid {
-		return nil, errs.NewAuthCookieAbsentError("JWT is invalid", nil)
+		return nil, errs.NewAuthInfoInvalidError("JWT is invalid", nil)
 	}
 
 	res, err := UserInfoFromJWT(jwtToken)
@@ -115,7 +114,7 @@ func UserInfoFromRequestJWT(r *http.Request) (*UserInfo, error) {
 func UserInfoFromJWT(jwt *jwt.Token) (*UserInfo, error) {
 	claims, ok := jwt.Claims.(*AppClaims)
 	if !ok {
-		return nil, errors.New("user info absent")
+		return nil, errs.NewAuthInfoInvalidError("JWT is invalid", nil)
 	}
 
 	return NewUserInfo(claims.Admin, claims.UserID, claims.Subject, claims.Roles), nil

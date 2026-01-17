@@ -7,6 +7,7 @@ import (
 	"github.com/ElfAstAhe/url-shortener2/internal/app/config"
 	auditservice "github.com/ElfAstAhe/url-shortener2/internal/bll/service/audit"
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/facade"
+	middleware2 "github.com/ElfAstAhe/url-shortener2/internal/ep/middleware"
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/middleware/audit"
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/middleware/compress"
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/middleware/iter14"
@@ -51,7 +52,20 @@ func (cr *AppChiRouter) setupMiddleware(observers []auditservice.IncomeObserver,
 	// dev income request audit
 	cr.router.Use(audit.NewDevIncomeMiddleware(logger, true).Handle)
 	// jwt auth iter14
-	cr.router.Use(iter14.NewJWTAuthIter14(nil, logger).Iter14Auth)
+	cr.router.Use(iter14.NewJWTAuthIter14(iter14.NewAuthIter14PathMatchers([]*iter14.AuthIter14PathMatcher{
+		// GET /
+		iter14.NewAuthIter14PathMatcher(http.MethodGet, "/", middleware2.PatternGetRoot, http.StatusUnauthorized, http.StatusUnauthorized, http.StatusGone, http.StatusInternalServerError),
+		// POST /
+		iter14.NewAuthIter14PathMatcher(http.MethodPost, "/", middleware2.PatternPostRoot, http.StatusUnauthorized, http.StatusUnauthorized, -1, http.StatusInternalServerError),
+		// POST /api/shorten
+		iter14.NewAuthIter14PathMatcher(http.MethodPost, "/api/shorten", middleware2.PatternPostApiShorten, http.StatusUnauthorized, http.StatusUnauthorized, -1, http.StatusInternalServerError),
+		// POST /api/shorten/batch
+		iter14.NewAuthIter14PathMatcher(http.MethodPost, "/api/shorten/batch", middleware2.PatternPostApiShortenBatch, http.StatusUnauthorized, http.StatusUnauthorized, -1, http.StatusInternalServerError),
+		// GET /api/user/urls
+		iter14.NewAuthIter14PathMatcher(http.MethodGet, "/api/user/urls", middleware2.PatternGetApiUserUrls, http.StatusUnauthorized, http.StatusUnauthorized, -1, http.StatusInternalServerError),
+		// DELETE /api/user/urls
+		iter14.NewAuthIter14PathMatcher(http.MethodDelete, "/api/user/urls", middleware2.PatternDeleteApiUserUrls, http.StatusUnauthorized, http.StatusUnauthorized, -1, http.StatusInternalServerError),
+	}, logger), logger).Iter14Auth)
 	// jwt auth
 	// ..
 	// requestID
