@@ -9,6 +9,7 @@ import (
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/facade"
 	middleware2 "github.com/ElfAstAhe/url-shortener2/internal/ep/middleware"
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/middleware/audit"
+	"github.com/ElfAstAhe/url-shortener2/internal/ep/middleware/auth"
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/middleware/compress"
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/middleware/iter14"
 	mwarelog "github.com/ElfAstAhe/url-shortener2/internal/ep/middleware/logger"
@@ -66,8 +67,8 @@ func (cr *AppChiRouter) setupMiddleware(observers []auditservice.IncomeObserver,
 		// DELETE /api/user/urls
 		iter14.NewAuthIter14PathMatcher(http.MethodDelete, "/api/user/urls", middleware2.PatternDeleteApiUserUrls, http.StatusUnauthorized, http.StatusUnauthorized, -1, http.StatusInternalServerError),
 	}, logger), logger).Iter14Auth)
-	// jwt auth
-	// ..
+	// jwt auth retriever
+	cr.router.Use(auth.NewJWTAuthRetriever(logger).AuthRetriever)
 	// requestID
 	cr.router.Use(middleware.RequestID)
 	// realIP
