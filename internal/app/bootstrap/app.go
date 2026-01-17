@@ -30,7 +30,6 @@ type App struct {
 	shortURIRepo     irepo.ShortURIRepository
 	shorterService   service.Shorter
 	toolFacade       facade.ToolFacade
-	authFacade       facade.AuthFacade
 	shortenFacade    facade.ShortenFacade
 	userFacade       facade.UserFacade
 	router           handler.AppRouter

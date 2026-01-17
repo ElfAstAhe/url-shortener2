@@ -119,7 +119,6 @@ func (app *App) initDependencies() error {
 
 	// facades
 	app.toolFacade = facade.NewToolFacadeImpl(app.connCheckRepo)
-	//	app.authFacade = facade.NewAuthFacadeImpl()
 	app.shortenFacade = facade.NewShortenFacadeImpl(app.shorterService)
 	app.userFacade = facade.NewUserFacadeImpl(app.shorterService, app.Log)
 
@@ -139,7 +138,7 @@ func (app *App) initRouter() error {
 		return err
 	}
 
-	app.router = handler.NewAppChiRouter(app.toolFacade, app.authFacade, app.shortenFacade, app.userFacade, observers, app.conf, app.Log)
+	app.router = handler.NewAppChiRouter(app.toolFacade, app.shortenFacade, app.userFacade, observers, app.conf, app.Log)
 
 	return nil
 }
