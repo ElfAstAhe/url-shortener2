@@ -21,17 +21,19 @@ import (
 )
 
 type Config struct {
-	AppName         string      `json:"app_name,omitempty"`
-	ProjectStage    string      `json:"project_stage,omitempty"`
-	LogLevel        string      `json:"log_level,omitempty"`
-	BaseURL         string      `json:"base_url,omitempty" env:"BASE_URL"`
-	HTTP            *HTTPConfig `json:"http,omitempty"`
-	DBKind          string      `json:"db_kind,omitempty"`
-	DBDsn           string      `json:"db_dsn,omitempty" env:"DATABASE_DSN"`
-	StoragePath     string      `json:"storage_path,omitempty" env:"FILE_STORAGE_PATH"`
-	StorageUserPath string      `json:"storage_user_path,omitempty" env:"FILE_STORAGE_USER_PATH"`
-	AuditFile       string      `json:"audit_file,omitempty" env:"AUDIT_FILE"`
-	AuditURL        string      `json:"audit_url,omitempty" env:"AUDIT_URL"`
+	AppName           string      `json:"app_name,omitempty"`
+	ProjectStage      string      `json:"project_stage,omitempty"`
+	LogLevel          string      `json:"log_level,omitempty"`
+	BaseURL           string      `json:"base_url,omitempty" env:"BASE_URL"`
+	HTTP              *HTTPConfig `json:"http,omitempty"`
+	DBKind            string      `json:"db_kind,omitempty"`
+	DBDsn             string      `json:"db_dsn,omitempty" env:"DATABASE_DSN"`
+	StoragePath       string      `json:"storage_path,omitempty" env:"FILE_STORAGE_PATH"`
+	StorageUserPath   string      `json:"storage_user_path,omitempty" env:"FILE_STORAGE_USER_PATH"`
+	AuditFile         string      `json:"audit_file,omitempty" env:"AUDIT_FILE"`
+	AuditIncomeLocal  bool
+	AuditURL          string `json:"audit_url,omitempty" env:"AUDIT_URL"`
+	AuditIncomeRemote bool
 }
 
 // Flags
@@ -72,14 +74,16 @@ func NewConfig() *Config {
 
 func newConfig(appName string, projectStage string, logLevel string, baseURL string, HTTP *HTTPConfig, DBKind string, DBDsn string, storagePath string) *Config {
 	return &Config{
-		AppName:      appName,
-		ProjectStage: projectStage,
-		LogLevel:     logLevel,
-		BaseURL:      baseURL,
-		HTTP:         HTTP,
-		DBKind:       DBKind,
-		DBDsn:        DBDsn,
-		StoragePath:  storagePath,
+		AppName:           appName,
+		ProjectStage:      projectStage,
+		LogLevel:          logLevel,
+		BaseURL:           baseURL,
+		HTTP:              HTTP,
+		DBKind:            DBKind,
+		DBDsn:             DBDsn,
+		StoragePath:       storagePath,
+		AuditIncomeLocal:  false,
+		AuditIncomeRemote: false,
 	}
 }
 
@@ -104,7 +108,11 @@ func (c *Config) LoadConfig() error {
 		c.DBKind = DBKindInMemory
 	}
 
-	fmt.Printf("Final config:  [%+v]\n", c)
+	if !c.AuditIncomeLocal {
+		c.AuditFile = DefaultAuditIncomePath
+	}
+
+	fmt.Printf("Config FINAL: [%+v]\r\n", c)
 
 	return nil
 }
@@ -112,7 +120,10 @@ func (c *Config) LoadConfig() error {
 func (c *Config) loadCli() error {
 	flag.Parse()
 
-	fmt.Printf("Config: %+v\r\n", c)
+	c.AuditIncomeLocal = strings.TrimSpace(c.AuditFile) != ""
+	c.AuditIncomeRemote = strings.TrimSpace(c.AuditURL) != ""
+
+	fmt.Printf("Config after CLI: [%+v]\r\n", c)
 
 	return nil
 }
@@ -128,7 +139,10 @@ func (c *Config) loadEnv() error {
 		return err
 	}
 
-	fmt.Printf("Config: %+v\r\n", c)
+	c.AuditIncomeLocal = strings.TrimSpace(c.AuditFile) != ""
+	c.AuditIncomeRemote = strings.TrimSpace(c.AuditURL) != ""
+
+	fmt.Printf("Config after ENV: [%+v]\r\n", c)
 
 	return nil
 }

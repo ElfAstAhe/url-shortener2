@@ -116,6 +116,7 @@ func (app *App) initDependencies() error {
 
 	// services
 	app.shorterService = service.NewShorterService(app.conf, app.shortURIRepo)
+	app.auditEventService = NewAuditEve
 
 	// facades
 	app.toolFacade = facade.NewToolFacadeImpl(app.connCheckRepo)

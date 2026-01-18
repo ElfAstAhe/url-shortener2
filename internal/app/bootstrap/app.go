@@ -13,27 +13,29 @@ import (
 	"github.com/ElfAstAhe/url-shortener2/internal/app/config/db"
 	irepo "github.com/ElfAstAhe/url-shortener2/internal/bll/repository"
 	"github.com/ElfAstAhe/url-shortener2/internal/bll/service"
+	"github.com/ElfAstAhe/url-shortener2/internal/bll/service/audit"
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/facade"
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/handler"
 	"github.com/ElfAstAhe/url-shortener2/pkg/logger"
 )
 
 type App struct {
-	ctx              context.Context
-	cancelFunc       context.CancelFunc
-	WG               sync.WaitGroup
-	db               db.DB
-	conf             *config.Config
-	Log              logger.Logger
-	connCheckRepo    irepo.DBConnCheckRepository
-	shortURIUserRepo irepo.ShortURIUserRepository
-	shortURIRepo     irepo.ShortURIRepository
-	shorterService   service.Shorter
-	toolFacade       facade.ToolFacade
-	shortenFacade    facade.ShortenFacade
-	userFacade       facade.UserFacade
-	router           handler.AppRouter
-	httpServer       *http.Server
+	ctx               context.Context
+	cancelFunc        context.CancelFunc
+	WG                sync.WaitGroup
+	db                db.DB
+	conf              *config.Config
+	Log               logger.Logger
+	connCheckRepo     irepo.DBConnCheckRepository
+	shortURIUserRepo  irepo.ShortURIUserRepository
+	shortURIRepo      irepo.ShortURIRepository
+	shorterService    service.Shorter
+	auditEventService audit.IncomePublisher
+	toolFacade        facade.ToolFacade
+	shortenFacade     facade.ShortenFacade
+	userFacade        facade.UserFacade
+	router            handler.AppRouter
+	httpServer        *http.Server
 }
 
 func NewApp() *App {
@@ -124,6 +126,11 @@ func (app *App) Close() error {
 
 	log.Info("save in mem data")
 	if err := app.saveInMemData(); err != nil {
+		return err
+	}
+
+	log.Info("close audit event service")
+	if err := app.auditEventService.Close(); err != nil {
 		return err
 	}
 

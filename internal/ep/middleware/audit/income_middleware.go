@@ -9,36 +9,18 @@ import (
 	"github.com/ElfAstAhe/url-shortener2/pkg/utils"
 )
 
-type IncomeAuditPath struct {
-	Method string
-	Path   string
-}
-
-func NewIncomeAuditPath(method, path string) *IncomeAuditPath {
-	return &IncomeAuditPath{
-		Method: method,
-		Path:   path,
-	}
-}
-
 type IncomeAuditMiddleware struct {
-	watchPaths []*IncomeAuditPath
+	watchPaths *middleware.PathMatchers
 	publisher  audit.IncomePublisher
 	log        logger.Logger
 }
 
-func NewIncomeAuditMiddleware(watchPaths []*IncomeAuditPath, log logger.Logger, incomeObservers ...audit.IncomeObserver) *IncomeAuditMiddleware {
-	middleware := &IncomeAuditMiddleware{
+func NewIncomeAuditMiddleware(watchPaths *middleware.PathMatchers, publisher audit.IncomePublisher, log logger.Logger) *IncomeAuditMiddleware {
+	return &IncomeAuditMiddleware{
 		watchPaths: watchPaths,
-		publisher:  audit.NewIncomeEventService(log),
-		log:        log,
+		publisher:  publisher,
+		log:        log.GetLogger("IncomeAuditMiddleware"),
 	}
-
-	//
-
-	//    var observer audit.IncomeObserver =
-
-	return middleware
 }
 
 func (ia *IncomeAuditMiddleware) Audit(next http.Handler) http.Handler {
@@ -49,17 +31,7 @@ func (ia *IncomeAuditMiddleware) Audit(next http.Handler) http.Handler {
 
 		if utils.IsSuccess(crw.Info.StatusCode) || utils.IsRedirection(crw.Info.StatusCode) {
 			// ToDo: implement
+			// ..
 		}
 	})
-}
-
-func (ia *IncomeAuditMiddleware) isWatchable(method, path string) bool {
-	for _, watchPath := range ia.watchPaths {
-		// ToDo: need algorithm improvement
-		if watchPath.Method == method && watchPath.Path == path {
-			return true
-		}
-	}
-
-	return false
 }

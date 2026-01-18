@@ -7,8 +7,7 @@ import (
 	"github.com/ElfAstAhe/url-shortener2/internal/app/config"
 	auditservice "github.com/ElfAstAhe/url-shortener2/internal/bll/service/audit"
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/facade"
-	appmiddleware "github.com/ElfAstAhe/url-shortener2/internal/ep/middleware"
-	"github.com/ElfAstAhe/url-shortener2/internal/ep/middleware/audit"
+	appmware "github.com/ElfAstAhe/url-shortener2/internal/ep/middleware"
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/middleware/auth"
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/middleware/compress"
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/middleware/iter14"
@@ -49,21 +48,21 @@ func (cr *AppChiRouter) GetRouter() http.Handler {
 
 func (cr *AppChiRouter) setupMiddleware(observers []auditservice.IncomeObserver, logger logger.Logger) {
 	// dev income request audit
-	cr.router.Use(audit.NewDevIncomeMiddleware(logger, true).Handle)
+	//	cr.router.Use(audit.NewDevIncomeMiddleware(logger, true).Handle)
 	// jwt auth iter14
 	cr.router.Use(iter14.NewJWTAuthIter14(iter14.NewAuthIter14PathMatchers([]*iter14.AuthIter14PathMatcher{
 		// GET /
-		iter14.NewAuthIter14PathMatcher(http.MethodGet, "/", appmiddleware.PatternGetRoot, http.StatusUnauthorized, http.StatusUnauthorized, http.StatusGone, http.StatusInternalServerError),
+		iter14.NewAuthIter14PathMatcher(http.MethodGet, "/", appmware.PatternGetRoot, http.StatusUnauthorized, http.StatusUnauthorized, http.StatusGone, http.StatusInternalServerError),
 		// POST /
-		iter14.NewAuthIter14PathMatcher(http.MethodPost, "/", appmiddleware.PatternPostRoot, http.StatusUnauthorized, http.StatusUnauthorized, -1, http.StatusInternalServerError),
+		iter14.NewAuthIter14PathMatcher(http.MethodPost, "/", appmware.PatternPostRoot, http.StatusUnauthorized, http.StatusUnauthorized, -1, http.StatusInternalServerError),
 		// POST /api/shorten
-		iter14.NewAuthIter14PathMatcher(http.MethodPost, "/api/shorten", appmiddleware.PatternPostApiShorten, http.StatusUnauthorized, http.StatusUnauthorized, -1, http.StatusInternalServerError),
+		iter14.NewAuthIter14PathMatcher(http.MethodPost, "/api/shorten", appmware.PatternPostApiShorten, http.StatusUnauthorized, http.StatusUnauthorized, -1, http.StatusInternalServerError),
 		// POST /api/shorten/batch
-		iter14.NewAuthIter14PathMatcher(http.MethodPost, "/api/shorten/batch", appmiddleware.PatternPostApiShortenBatch, http.StatusUnauthorized, http.StatusUnauthorized, -1, http.StatusInternalServerError),
+		iter14.NewAuthIter14PathMatcher(http.MethodPost, "/api/shorten/batch", appmware.PatternPostApiShortenBatch, http.StatusUnauthorized, http.StatusUnauthorized, -1, http.StatusInternalServerError),
 		// GET /api/user/urls
-		iter14.NewAuthIter14PathMatcher(http.MethodGet, "/api/user/urls", appmiddleware.PatternGetApiUserUrls, http.StatusUnauthorized, http.StatusUnauthorized, -1, http.StatusInternalServerError),
+		iter14.NewAuthIter14PathMatcher(http.MethodGet, "/api/user/urls", appmware.PatternGetApiUserUrls, http.StatusUnauthorized, http.StatusUnauthorized, -1, http.StatusInternalServerError),
 		// DELETE /api/user/urls
-		iter14.NewAuthIter14PathMatcher(http.MethodDelete, "/api/user/urls", appmiddleware.PatternDeleteApiUserUrls, http.StatusUnauthorized, http.StatusUnauthorized, -1, http.StatusInternalServerError),
+		iter14.NewAuthIter14PathMatcher(http.MethodDelete, "/api/user/urls", appmware.PatternDeleteApiUserUrls, http.StatusUnauthorized, http.StatusUnauthorized, -1, http.StatusInternalServerError),
 	}, logger), logger).Iter14Auth)
 	// jwt auth retriever
 	cr.router.Use(auth.NewJWTAuthRetriever(logger).AuthRetriever)
@@ -78,12 +77,7 @@ func (cr *AppChiRouter) setupMiddleware(observers []auditservice.IncomeObserver,
 	// income/outcome logger
 	cr.router.Use(mwarelog.NewHTTPReqRespLogger(logger).LogReqRes)
 	// income audit
-	cr.router.Use(audit.NewIncomeAuditMiddleware([]*audit.IncomeAuditPath{
-		audit.NewIncomeAuditPath(http.MethodGet, "/"),
-		audit.NewIncomeAuditPath(http.MethodPost, "/"),
-		audit.NewIncomeAuditPath(http.MethodPost, "/api/shorten")},
-		logger,
-		observers...).Audit)
+	// ..
 	// recoverer
 	cr.router.Use(middleware.Recoverer)
 	// timeout

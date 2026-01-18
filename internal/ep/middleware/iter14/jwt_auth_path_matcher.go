@@ -1,11 +1,13 @@
 package iter14
 
 import (
+	"strings"
+
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/middleware"
 	"github.com/ElfAstAhe/url-shortener2/pkg/logger"
 )
 
-// AuthIter14PathMatcher describes watch path
+// AuthIter14PathMatcher describes a watch path
 type AuthIter14PathMatcher struct {
 	PathMatcher              *middleware.PathMatcher
 	InfoAbsentStatusCode     int
@@ -37,15 +39,13 @@ func NewAuthIter14PathMatchers(matchers []*AuthIter14PathMatcher, logger logger.
 		slice, ok := pathMatchers[matcher.PathMatcher.Method]
 		if !ok {
 			slice = make([]*AuthIter14PathMatcher, 0)
-			pathMatchers[matcher.PathMatcher.Method] = slice
 		}
 
-		if pathExists(slice, matcher.PathMatcher.Method, matcher.PathMatcher.Path) {
+		if iter14AuthWatchPathExists(slice, matcher.PathMatcher.Method, matcher.PathMatcher.Path) {
 			continue
 		}
 
-		slice = append(slice, matcher)
-		pathMatchers[matcher.PathMatcher.Method] = slice
+		pathMatchers[matcher.PathMatcher.Method] = append(slice, matcher)
 	}
 
 	return &AuthIter14PathMatchers{
@@ -66,19 +66,15 @@ func (pms *AuthIter14PathMatchers) GetPathMatcher(method string, path string) *A
 
 	for _, item := range slice {
 		if item.PathMatcher.Match(method, path) {
-			//			pms.log.Info(fmt.Sprintf("Found matcher: method [%s] path [%s] pattern [%s] for request path [%s] ]", item.PathMatcher.Method, item.PathMatcher.Path, item.PathMatcher.Pattern, path))
-
 			return item
 		}
 	}
 
-	//	pms.log.Info(fmt.Sprintf("No matcher: for request path [%s] ]", path))
-
 	return nil
 }
 
-func pathExists(src []*AuthIter14PathMatcher, method string, path string) bool {
-	if len(src) == 0 {
+func iter14AuthWatchPathExists(src []*AuthIter14PathMatcher, method string, path string) bool {
+	if len(src) == 0 || strings.TrimSpace(method) == "" || strings.TrimSpace(path) == "" {
 		return false
 	}
 

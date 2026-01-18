@@ -6,6 +6,7 @@ import (
 
 	"github.com/ElfAstAhe/url-shortener2/pkg/client/audit/dto"
 	"github.com/ElfAstAhe/url-shortener2/pkg/logger"
+	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -58,12 +59,12 @@ func (i *IncomeEventService) NotifyAsync(dto *dto.IncomeAuditDto) {
 	go func() {
 		select {
 		case <-ctx.Done():
-			i.log.Warnf("audit income data context canceled [%v]", ctx.Err())
+			i.log.Warnf("audit income data context canceled [%v]", zap.Error(ctx.Err()))
 			return
 		default:
 			err := i.notify(ctx, dto)
 			if err != nil {
-				i.log.Errorf("audit income data got error [%v]", err)
+				i.log.Errorf("audit income data got error [%v]", zap.Error(err))
 			}
 		}
 	}()

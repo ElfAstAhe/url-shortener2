@@ -14,3 +14,5 @@ const DefaultDBDsn = ""
 
 const DefaultStoragePath = "./shortener.txt"
 const DefaultStorageUserPath = "./shortener_user.txt"
+
+const DefaultAuditIncomePath = "./audit_income.txt"

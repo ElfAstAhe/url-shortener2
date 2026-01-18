@@ -4,33 +4,38 @@ import (
 	"context"
 	"time"
 
-	"github.com/ElfAstAhe/url-shortener2/internal/app/config"
 	"github.com/ElfAstAhe/url-shortener2/pkg/client/audit"
 	"github.com/ElfAstAhe/url-shortener2/pkg/client/audit/dto"
 )
 
 type IncomeRemoteService struct {
-	client audit.IncomeClient
+	client  audit.IncomeClient
+	observe bool
 }
 
-func NewIncomeRemoteService(appConfig *config.Config) *IncomeRemoteService {
+func NewIncomeRemoteService(baseURL string, observe bool) *IncomeRemoteService {
 	return &IncomeRemoteService{
-		client: audit.NewSimpleClient(appConfig.AuditURL, 3*time.Second),
+		client:  audit.NewSimpleClient(baseURL, 3*time.Second),
+		observe: observe,
 	}
-}
-
-// IncomeObserver interface
-
-func (i *IncomeRemoteService) Observe(ctx context.Context, dto *dto.IncomeAuditDto) error {
-	return i.client.AuditIncome(ctx, dto)
-}
-
-func (i *IncomeRemoteService) GetID() string {
-	return "REMOTE_INCOME_AUDIT"
 }
 
 // Closer interface
 
 func (i *IncomeRemoteService) Close() error {
 	return nil
+}
+
+// IncomeObserver interface
+
+func (i *IncomeRemoteService) Observe(ctx context.Context, dto *dto.IncomeAuditDto) error {
+	if !i.observe {
+		return nil
+	}
+
+	return i.client.AuditIncome(ctx, dto)
+}
+
+func (i *IncomeRemoteService) GetID() string {
+	return "REMOTE_INCOME_AUDIT"
 }
