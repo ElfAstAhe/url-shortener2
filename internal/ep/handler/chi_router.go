@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/ElfAstAhe/url-shortener2/internal/app/config"
-	auditservice "github.com/ElfAstAhe/url-shortener2/internal/bll/service/audit"
+	"github.com/ElfAstAhe/url-shortener2/internal/bll/service/audit"
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/facade"
 	appmware "github.com/ElfAstAhe/url-shortener2/internal/ep/middleware"
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/middleware/auth"
@@ -26,7 +26,7 @@ type AppChiRouter struct {
 	userFacade    facade.UserFacade
 }
 
-func NewAppChiRouter(toolFacade facade.ToolFacade, shortenFacade facade.ShortenFacade, userFacade facade.UserFacade, observers []auditservice.IncomeObserver, conf *config.Config, logger logger.Logger) *AppChiRouter {
+func NewAppChiRouter(toolFacade facade.ToolFacade, shortenFacade facade.ShortenFacade, userFacade facade.UserFacade, auditIncome audit.IncomePublisher, conf *config.Config, logger logger.Logger) *AppChiRouter {
 	res := &AppChiRouter{
 		router:        chi.NewRouter(),
 		log:           logger.GetLogger("app router"),
@@ -36,7 +36,7 @@ func NewAppChiRouter(toolFacade facade.ToolFacade, shortenFacade facade.ShortenF
 		userFacade:    userFacade,
 	}
 
-	res.setupMiddleware(observers, logger)
+	res.setupMiddleware(auditIncome, logger)
 	res.setupRoutes()
 
 	return res
@@ -46,7 +46,7 @@ func (cr *AppChiRouter) GetRouter() http.Handler {
 	return cr.router
 }
 
-func (cr *AppChiRouter) setupMiddleware(observers []auditservice.IncomeObserver, logger logger.Logger) {
+func (cr *AppChiRouter) setupMiddleware(auditIncome audit.IncomePublisher, logger logger.Logger) {
 	// dev income request audit
 	//	cr.router.Use(audit.NewDevIncomeMiddleware(logger, true).Handle)
 	// jwt auth iter14
@@ -77,7 +77,7 @@ func (cr *AppChiRouter) setupMiddleware(observers []auditservice.IncomeObserver,
 	// income/outcome logger
 	cr.router.Use(mwarelog.NewHTTPReqRespLogger(logger).LogReqRes)
 	// income audit
-	// ..
+	New
 	// recoverer
 	cr.router.Use(middleware.Recoverer)
 	// timeout

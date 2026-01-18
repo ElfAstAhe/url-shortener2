@@ -2,7 +2,6 @@ package bootstrap
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/ElfAstAhe/url-shortener2/internal/app/config"
 	"github.com/ElfAstAhe/url-shortener2/internal/app/config/db"
@@ -116,7 +115,14 @@ func (app *App) initDependencies() error {
 
 	// services
 	app.shorterService = service.NewShorterService(app.conf, app.shortURIRepo)
-	app.auditEventService = NewAuditEve
+	app.auditEventService = audit.NewIncomeEventService(app.Log)
+	observers, err := app.initIncomeObservers()
+	if err != nil {
+		return err
+	}
+	for _, observer := range observers {
+		app.auditEventService.Register(observer)
+	}
 
 	// facades
 	app.toolFacade = facade.NewToolFacadeImpl(app.connCheckRepo)
@@ -133,34 +139,24 @@ func (app *App) initStartupServices() error {
 }
 
 func (app *App) initRouter() error {
-	// observers
-	observers, err := app.initIncomeObservers()
-	if err != nil {
-		return err
-	}
-
-	app.router = handler.NewAppChiRouter(app.toolFacade, app.shortenFacade, app.userFacade, observers, app.conf, app.Log)
+	app.router = handler.NewAppChiRouter(app.toolFacade, app.shortenFacade, app.userFacade, app.auditEventService, app.conf, app.Log)
 
 	return nil
 }
 
 func (app *App) initIncomeObservers() ([]audit.IncomeObserver, error) {
-	res := make([]audit.IncomeObserver, 0)
 	// local
-	if strings.TrimSpace(app.conf.AuditFile) != "" {
-		localIncomeObserver, err := audit.NewIncomeLocalService(app.conf)
-		if err != nil {
-			return nil, err
-		}
-
-		res = append(res, localIncomeObserver)
+	localIncomeObserver, err := audit.NewIncomeLocalService(app.conf.AuditFile, app.conf.AuditIncomeLocal)
+	if err != nil {
+		return nil, err
 	}
 	// remote
-	if strings.TrimSpace(app.conf.AuditURL) != "" {
-		res = append(res, audit.NewIncomeRemoteService(app.conf))
-	}
+	remoteIncomeObserver := audit.NewIncomeRemoteService(app.conf.AuditURL, app.conf.AuditIncomeRemote)
 
-	return res, nil
+	return []audit.IncomeObserver{
+		localIncomeObserver,
+		remoteIncomeObserver,
+	}, nil
 }
 
 func (app *App) initHTTPServer() error {
