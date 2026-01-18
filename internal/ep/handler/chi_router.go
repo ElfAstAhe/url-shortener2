@@ -8,6 +8,7 @@ import (
 	"github.com/ElfAstAhe/url-shortener2/internal/bll/service/audit"
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/facade"
 	appmware "github.com/ElfAstAhe/url-shortener2/internal/ep/middleware"
+	auditmware "github.com/ElfAstAhe/url-shortener2/internal/ep/middleware/audit"
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/middleware/auth"
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/middleware/compress"
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/middleware/iter14"
@@ -77,7 +78,11 @@ func (cr *AppChiRouter) setupMiddleware(auditIncome audit.IncomePublisher, logge
 	// income/outcome logger
 	cr.router.Use(mwarelog.NewHTTPReqRespLogger(logger).LogReqRes)
 	// income audit
-	New
+	cr.router.Use(auditmware.NewIncomeAuditMiddleware(appmware.NewPathMatchers([]*appmware.PathMatcher{
+		appmware.NewPathMatcher(http.MethodGet, "/", appmware.PatternGetRoot),
+		appmware.NewPathMatcher(http.MethodPost, "/", appmware.PatternPostRoot),
+		appmware.NewPathMatcher(http.MethodPost, "/api/shorten", appmware.PatternPostApiShorten),
+	}), auditIncome, logger).Audit)
 	// recoverer
 	cr.router.Use(middleware.Recoverer)
 	// timeout
