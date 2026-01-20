@@ -19,11 +19,13 @@ import (
 
 type ShortenFacadeImpl struct {
 	service service.Shorter
+	baseURL string
 }
 
-func NewShortenFacadeImpl(service service.Shorter) *ShortenFacadeImpl {
+func NewShortenFacadeImpl(service service.Shorter, baseURL string) *ShortenFacadeImpl {
 	return &ShortenFacadeImpl{
 		service: service,
+		baseURL: baseURL,
 	}
 }
 
@@ -70,7 +72,7 @@ func (sf *ShortenFacadeImpl) CreateURL(ctx context.Context, income io.Reader) (*
 	}
 
 	key, err := sf.service.Store(ctx, userInfo.UserID, cr.URL)
-	res, _ := mapper.ShortenCreateResponseFromKey(key)
+	res, _ := mapper.ShortenCreateResponseFromKey(sf.baseURL, key)
 	if err != nil {
 		if res != nil {
 			return res, err
@@ -127,7 +129,7 @@ func (sf *ShortenFacadeImpl) Store(ctx context.Context, income io.Reader) (strin
 		return key, err
 	}
 
-	res, err := mapper.ShortenCreateResponseFromKey(key)
+	res, err := mapper.ShortenCreateResponseFromKey(sf.baseURL, key)
 	if err != nil {
 		return "", err
 	}

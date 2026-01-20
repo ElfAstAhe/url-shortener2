@@ -62,8 +62,6 @@ const (
 	EnvAuditURL            string = "AUDIT_URL"
 )
 
-var AppConfig *Config
-
 func NewConfig() *Config {
 	var cfg = defaultConfig()
 

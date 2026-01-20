@@ -38,8 +38,27 @@ func (ai14 *JWTAuthIter14) Iter14Auth(next http.Handler) http.Handler {
 				userInfo, err := auth.UserInfoFromRequestJWT(r)
 
 				if !ai14.validateUserInfo(userInfo, err) {
-					// answer with new auth cookie or error without cookie
-					if err := ai14.answerError(userInfo, err, matcher, rw); err != nil {
+					// specific for POST batch
+					if matcher.PathMatcher.Method == http.MethodPost && matcher.PathMatcher.Path == "/api/shorten/batch" {
+						userInfo = auth.BuildRandomUserInfo()
+						jwtString, err := auth.NewJWTStringFromUserInfo(userInfo)
+						if err != nil {
+							http.Error(rw, err.Error(), http.StatusInternalServerError)
+
+							return
+						}
+						// add cookie
+						r.AddCookie(&http.Cookie{
+							Name:     auth.CookieName,
+							Value:    jwtString,
+							SameSite: http.SameSiteStrictMode,
+						})
+
+						// add set-cookie into answer
+						ai14.setJWTAuthCookie(jwtString, rw)
+
+						next.ServeHTTP(rw, r)
+					} else if err := ai14.answerError(userInfo, err, matcher, rw); err != nil {
 						ai14.log.Errorf("got error on set auth cookie [%v]", err.Error())
 
 						http.Error(rw, err.Error(), http.StatusInternalServerError)

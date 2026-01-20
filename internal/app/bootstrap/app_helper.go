@@ -89,10 +89,10 @@ func (app *App) loadInMemData() error {
 func (app *App) saveInMemData() error {
 	log := app.Log.GetLogger("inMem")
 	if cache, ok := app.db.(db.InMemoryCache); ok {
-		if err := app.saveShortURIData(config.AppConfig.StoragePath, cache); err != nil {
+		if err := app.saveShortURIData(app.conf.StoragePath, cache); err != nil {
 			log.Errorf("error save shortURI data: [%v]", err)
 		}
-		if err := app.saveShortURIUserData(config.AppConfig.StorageUserPath, cache); err != nil {
+		if err := app.saveShortURIUserData(app.conf.StorageUserPath, cache); err != nil {
 			log.Errorf("error save shortURI user data: [%v]", err)
 		}
 	}
@@ -126,7 +126,7 @@ func (app *App) initDependencies() error {
 
 	// facades
 	app.toolFacade = facade.NewToolFacadeImpl(app.connCheckRepo)
-	app.shortenFacade = facade.NewShortenFacadeImpl(app.shorterService)
+	app.shortenFacade = facade.NewShortenFacadeImpl(app.shorterService, app.conf.BaseURL)
 	app.userFacade = facade.NewUserFacadeImpl(app.shorterService, app.Log)
 
 	return nil

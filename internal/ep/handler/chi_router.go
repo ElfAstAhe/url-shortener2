@@ -60,8 +60,6 @@ func (cr *AppChiRouter) setupMiddleware(auditIncome audit.IncomePublisher, logge
 		iter14.NewAuthIter14PathMatcher(http.MethodPost, "/api/shorten/batch", appmware.PatternPostApiShortenBatch, http.StatusUnauthorized, http.StatusUnauthorized, http.StatusInternalServerError),
 		// GET /api/user/urls
 		iter14.NewAuthIter14PathMatcher(http.MethodGet, "/api/user/urls", appmware.PatternGetApiUserUrls, http.StatusNoContent, http.StatusUnauthorized, http.StatusInternalServerError),
-		// DELETE /api/user/urls
-		iter14.NewAuthIter14PathMatcher(http.MethodDelete, "/api/user/urls", appmware.PatternDeleteApiUserUrls, http.StatusUnauthorized, http.StatusUnauthorized, http.StatusInternalServerError),
 	}, logger), logger).Iter14Auth)
 	// jwt auth retriever
 	cr.router.Use(auth.NewJWTAuthRetriever(logger).AuthRetriever)

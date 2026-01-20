@@ -1,28 +1,27 @@
 package mapper
 
 import (
-	"github.com/ElfAstAhe/url-shortener2/internal/app/config"
 	"github.com/ElfAstAhe/url-shortener2/internal/bll/model"
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/dto"
 	"github.com/ElfAstAhe/url-shortener2/internal/utils"
 )
 
-func ShortenCreateResponseFromKey(key string) (*dto.ShortenCreateResponse, error) {
+func ShortenCreateResponseFromKey(baseURL string, key string) (*dto.ShortenCreateResponse, error) {
 	if key == "" {
 		return nil, nil
 	}
 
 	return &dto.ShortenCreateResponse{
-		Result: utils.BuildNewURI(config.AppConfig.BaseURL, key),
+		Result: utils.BuildNewURI(baseURL, key),
 	}, nil
 }
 
-func ShortenCreateResponseFromEntity(entity *model.ShortURI) (*dto.ShortenCreateResponse, error) {
+func ShortenCreateResponseFromEntity(baseURL string, entity *model.ShortURI) (*dto.ShortenCreateResponse, error) {
 	if entity == nil {
 		return nil, nil
 	}
 
-	return ShortenCreateResponseFromKey(entity.Key)
+	return ShortenCreateResponseFromKey(baseURL, entity.Key)
 }
 
 func ShortenBatchResponseFromKeys(source map[string]string) ([]*dto.ShortenBatchResponseItem, error) {
@@ -40,7 +39,7 @@ func ShortenBatchResponseFromKeys(source map[string]string) ([]*dto.ShortenBatch
 	return res, nil
 }
 
-func ShortenBatchResponseFromEntity(source map[string]*model.ShortURI) ([]*dto.ShortenBatchResponseItem, error) {
+func ShortenBatchResponseFromEntity(baseURL string, source map[string]*model.ShortURI) ([]*dto.ShortenBatchResponseItem, error) {
 	if len(source) == 0 {
 		return make([]*dto.ShortenBatchResponseItem, 0), nil
 	}
@@ -48,7 +47,7 @@ func ShortenBatchResponseFromEntity(source map[string]*model.ShortURI) ([]*dto.S
 	for key, value := range source {
 		res = append(res, &dto.ShortenBatchResponseItem{
 			CorrelationID: key,
-			ShortURL:      utils.BuildNewURI(config.AppConfig.BaseURL, value.Key),
+			ShortURL:      utils.BuildNewURI(baseURL, value.Key),
 		})
 	}
 
