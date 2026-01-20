@@ -6,6 +6,9 @@ import (
 )
 
 func (cr *AppChiRouter) getAPIUserUrls(rw http.ResponseWriter, r *http.Request) {
+	cr.log.Info("getAPIUserUrls start")
+	defer cr.log.Info("getAPIUserUrls finish")
+
 	res, err := cr.userFacade.ListAllShortens(r.Context())
 	if err != nil {
 		http.Error(rw, err.Error(), http.StatusInternalServerError)

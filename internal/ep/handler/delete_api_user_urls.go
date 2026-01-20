@@ -8,8 +8,8 @@ import (
 )
 
 func (cr *AppChiRouter) deleteAPIUserUrls(rw http.ResponseWriter, r *http.Request) {
-	cr.log.Debug("deleteAPIUserUrls start")
-	defer cr.log.Debug("deleteAPIUserUrls end")
+	cr.log.Info("deleteAPIUserUrls start")
+	defer cr.log.Info("deleteAPIUserUrls finish")
 
 	if !auth.HasUserInfoInRequest(r) {
 		// 401

@@ -3,6 +3,9 @@ package handler
 import "net/http"
 
 func (cr *AppChiRouter) getPing(rw http.ResponseWriter, r *http.Request) {
+	cr.log.Info("getPing start")
+	defer cr.log.Info("getPing finish")
+
 	err := cr.toolFacade.Ping(r.Context())
 	if err != nil {
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
