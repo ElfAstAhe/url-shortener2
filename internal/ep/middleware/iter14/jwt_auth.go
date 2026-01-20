@@ -86,11 +86,6 @@ func (ai14 *JWTAuthIter14) answerError(userInfo *auth.UserInfo, err error, match
 			errMsg = err.Error()
 			break
 		}
-	case err != nil && userInfo != nil && matcher.ErrAndUserInfoStatusCode > 0:
-		{
-			statusCode = matcher.ErrAndUserInfoStatusCode
-			break
-		}
 	default:
 		{
 			statusCode = matcher.DefaultStatusCode

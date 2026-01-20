@@ -324,9 +324,14 @@ func (pgs *ShortURIPgRepo) addUser(ctx context.Context, stmt *sql.Stmt, id strin
 	if err != nil {
 		return err
 	}
-
-	if _, err := pgs.userRepo.CreateStmt(ctx, stmt, user); err != nil {
-		return err
+	if stmt != nil {
+		if _, err := pgs.userRepo.CreateStmt(ctx, stmt, user); err != nil {
+			return err
+		}
+	} else {
+		if _, err := pgs.userRepo.Create(ctx, user); err != nil {
+			return err
+		}
 	}
 
 	return nil

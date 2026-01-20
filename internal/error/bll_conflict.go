@@ -7,7 +7,7 @@ type BllConflictError struct {
 	err error
 }
 
-var BllConflictErr *BllInvalidOriginalURLError
+var BllConflictErr *BllConflictError
 
 func NewBllConflictError(key string) *BllConflictError {
 	return NewBllConflictErrorEx(key, nil)

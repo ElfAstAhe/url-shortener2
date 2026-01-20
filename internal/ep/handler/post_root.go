@@ -10,8 +10,8 @@ import (
 )
 
 func (cr *AppChiRouter) postRoot(rw http.ResponseWriter, r *http.Request) {
-	cr.log.Info("postAPIShortenBatch start")
-	defer cr.log.Info("postAPIShortenBatch finish")
+	cr.log.Info("postRoot start")
+	defer cr.log.Info("postRoot finish")
 
 	defer utils.CloseOnly(r.Body)
 

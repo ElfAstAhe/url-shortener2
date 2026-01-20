@@ -8,6 +8,9 @@ import (
 )
 
 func (cr *AppChiRouter) getRoot(rw http.ResponseWriter, r *http.Request) {
+	cr.log.Info("getRoot start")
+	defer cr.log.Info("getRoot finish")
+
 	res, err := cr.shortenFacade.GetURL(r.Context(), r)
 	if err != nil {
 		// 410

@@ -52,18 +52,16 @@ func (cr *AppChiRouter) setupMiddleware(auditIncome audit.IncomePublisher, logge
 	//	cr.router.Use(audit.NewDevIncomeMiddleware(logger, true).Handle)
 	// jwt auth iter14
 	cr.router.Use(iter14.NewJWTAuthIter14(iter14.NewAuthIter14PathMatchers([]*iter14.AuthIter14PathMatcher{
-		// GET /
-		iter14.NewAuthIter14PathMatcher(http.MethodGet, "/", appmware.PatternGetRoot, http.StatusUnauthorized, http.StatusUnauthorized, http.StatusGone, http.StatusInternalServerError),
 		// POST /
-		iter14.NewAuthIter14PathMatcher(http.MethodPost, "/", appmware.PatternPostRoot, http.StatusUnauthorized, http.StatusUnauthorized, -1, http.StatusInternalServerError),
+		iter14.NewAuthIter14PathMatcher(http.MethodPost, "/", appmware.PatternPostRoot, http.StatusUnauthorized, http.StatusUnauthorized, http.StatusInternalServerError),
 		// POST /api/shorten
-		iter14.NewAuthIter14PathMatcher(http.MethodPost, "/api/shorten", appmware.PatternPostApiShorten, http.StatusUnauthorized, http.StatusUnauthorized, -1, http.StatusInternalServerError),
+		iter14.NewAuthIter14PathMatcher(http.MethodPost, "/api/shorten", appmware.PatternPostApiShorten, http.StatusUnauthorized, http.StatusUnauthorized, http.StatusInternalServerError),
 		// POST /api/shorten/batch
-		iter14.NewAuthIter14PathMatcher(http.MethodPost, "/api/shorten/batch", appmware.PatternPostApiShortenBatch, http.StatusUnauthorized, http.StatusUnauthorized, -1, http.StatusInternalServerError),
+		iter14.NewAuthIter14PathMatcher(http.MethodPost, "/api/shorten/batch", appmware.PatternPostApiShortenBatch, http.StatusUnauthorized, http.StatusUnauthorized, http.StatusInternalServerError),
 		// GET /api/user/urls
-		iter14.NewAuthIter14PathMatcher(http.MethodGet, "/api/user/urls", appmware.PatternGetApiUserUrls, http.StatusUnauthorized, http.StatusUnauthorized, -1, http.StatusInternalServerError),
+		iter14.NewAuthIter14PathMatcher(http.MethodGet, "/api/user/urls", appmware.PatternGetApiUserUrls, http.StatusNoContent, http.StatusUnauthorized, http.StatusInternalServerError),
 		// DELETE /api/user/urls
-		iter14.NewAuthIter14PathMatcher(http.MethodDelete, "/api/user/urls", appmware.PatternDeleteApiUserUrls, http.StatusUnauthorized, http.StatusUnauthorized, -1, http.StatusInternalServerError),
+		iter14.NewAuthIter14PathMatcher(http.MethodDelete, "/api/user/urls", appmware.PatternDeleteApiUserUrls, http.StatusUnauthorized, http.StatusUnauthorized, http.StatusInternalServerError),
 	}, logger), logger).Iter14Auth)
 	// jwt auth retriever
 	cr.router.Use(auth.NewJWTAuthRetriever(logger).AuthRetriever)

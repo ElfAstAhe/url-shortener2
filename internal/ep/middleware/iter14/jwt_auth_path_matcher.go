@@ -9,20 +9,18 @@ import (
 
 // AuthIter14PathMatcher describes a watch path
 type AuthIter14PathMatcher struct {
-	PathMatcher              *middleware.PathMatcher
-	InfoAbsentStatusCode     int
-	InfoInvalidStatusCode    int
-	ErrAndUserInfoStatusCode int
-	DefaultStatusCode        int
+	PathMatcher           *middleware.PathMatcher
+	InfoAbsentStatusCode  int
+	InfoInvalidStatusCode int
+	DefaultStatusCode     int
 }
 
-func NewAuthIter14PathMatcher(method string, path string, pattern string, infoAbsentStatusCode int, infoInvalidStatusCode int, errAndUserInfoStatusCode int, defaultStatusCode int) *AuthIter14PathMatcher {
+func NewAuthIter14PathMatcher(method string, path string, pattern string, infoAbsentStatusCode int, infoInvalidStatusCode int, defaultStatusCode int) *AuthIter14PathMatcher {
 	return &AuthIter14PathMatcher{
-		PathMatcher:              middleware.NewPathMatcher(method, path, pattern),
-		InfoAbsentStatusCode:     infoAbsentStatusCode,
-		InfoInvalidStatusCode:    infoInvalidStatusCode,
-		ErrAndUserInfoStatusCode: errAndUserInfoStatusCode,
-		DefaultStatusCode:        defaultStatusCode,
+		PathMatcher:           middleware.NewPathMatcher(method, path, pattern),
+		InfoAbsentStatusCode:  infoAbsentStatusCode,
+		InfoInvalidStatusCode: infoInvalidStatusCode,
+		DefaultStatusCode:     defaultStatusCode,
 	}
 }
 
