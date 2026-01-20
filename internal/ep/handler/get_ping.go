@@ -11,6 +11,7 @@ func (cr *AppChiRouter) getPing(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	rw.WriteHeader(http.StatusOK)
+	rw.Header().Set("Content-Type", "plain/text")
 	_, err = rw.Write([]byte("pong"))
 	if err != nil {
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
