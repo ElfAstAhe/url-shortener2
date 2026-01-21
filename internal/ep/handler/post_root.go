@@ -50,10 +50,10 @@ func (cr *AppChiRouter) postRoot(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (cr *AppChiRouter) setupIter14JWTOrSendError(rw http.ResponseWriter, r *http.Request) (*http.Request, error) {
-	userInfo, err := auth.UserInfoFromRequestJWT(r)
+	_, err := auth.UserInfoFromRequestJWT(r)
 	if err != nil {
 		if errors.As(err, &errs.AuthInfoInvalidErr) || errors.As(err, &errs.AuthInfoAbsentErr) {
-			userInfo = auth.BuildRandomUserInfo()
+			userInfo := auth.BuildRandomUserInfo()
 			tokenString, err := auth.NewJWTStringFromUserInfo(userInfo)
 			if err != nil {
 				return nil, err
