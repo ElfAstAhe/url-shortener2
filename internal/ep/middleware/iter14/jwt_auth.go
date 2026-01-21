@@ -96,19 +96,16 @@ func (ai14 *JWTAuthIter14) answerError(userInfo *auth.UserInfo, err error, match
 			ai14.setJWTAuthCookie(tokenString, rw)
 			statusCode = matcher.InfoAbsentStatusCode
 			errMsg = err.Error()
-			break
 		}
 	case errors.As(err, &errs.AuthInfoInvalidErr) && matcher.InfoInvalidStatusCode > 0:
 		{
 			ai14.setJWTAuthCookie(tokenString, rw)
 			statusCode = matcher.InfoInvalidStatusCode
 			errMsg = err.Error()
-			break
 		}
 	default:
 		{
 			statusCode = matcher.DefaultStatusCode
-			break
 		}
 	}
 
