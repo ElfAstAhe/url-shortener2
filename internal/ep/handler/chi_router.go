@@ -52,8 +52,6 @@ func (cr *AppChiRouter) setupMiddleware(auditIncome audit.IncomePublisher, logge
 	//	cr.router.Use(audit.NewDevIncomeMiddleware(logger, true).Handle)
 	// jwt auth iter14
 	cr.router.Use(iter14.NewJWTAuthIter14(iter14.NewAuthIter14PathMatchers([]*iter14.AuthIter14PathMatcher{
-		// POST /
-		iter14.NewAuthIter14PathMatcher(http.MethodPost, "/", mwareapp.PatternPostRoot, http.StatusUnauthorized, http.StatusUnauthorized, http.StatusInternalServerError),
 		// POST /api/shorten
 		iter14.NewAuthIter14PathMatcher(http.MethodPost, "/api/shorten", mwareapp.PatternPostAPIShorten, http.StatusUnauthorized, http.StatusUnauthorized, http.StatusInternalServerError),
 		// POST /api/shorten/batch
