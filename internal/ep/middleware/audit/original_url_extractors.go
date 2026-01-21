@@ -17,7 +17,7 @@ func OriginalURLExtractPostRoot(data []byte) (string, error) {
 	return string(data), nil
 }
 
-func OriginalURLExtractPostApiShorten(data []byte) (string, error) {
+func OriginalURLExtractPostAPIShorten(data []byte) (string, error) {
 	dec := json.NewDecoder(bytes.NewReader(data))
 	var res = new(dto.ShortenCreateRequest)
 	err := dec.Decode(res)

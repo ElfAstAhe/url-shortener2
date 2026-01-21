@@ -42,6 +42,9 @@ func (uf *UserFacadeImpl) BatchDelete(ctx context.Context, rawData io.Reader) er
 	}
 
 	incomeData, err := mapper.UserBatchDeletesFromDto(batchData)
+	if err != nil {
+		return err
+	}
 
 	return uf.shortenService.BatchDelete(ctx, userInfo.UserID, incomeData)
 }

@@ -8,7 +8,7 @@ import (
 	"github.com/ElfAstAhe/url-shortener2/pkg/logger"
 )
 
-type DevHttpRequestDto struct {
+type DevHTTPRequestDto struct {
 	Host       string   `json:"host"`
 	Method     string   `json:"method"`
 	RequestURI string   `json:"requestURI"`
@@ -50,8 +50,8 @@ func (dim *DevIncomeMiddleware) Handle(next http.Handler) http.Handler {
 	return http.HandlerFunc(meth)
 }
 
-func (dim *DevIncomeMiddleware) requestToDto(r *http.Request) *DevHttpRequestDto {
-	return &DevHttpRequestDto{
+func (dim *DevIncomeMiddleware) requestToDto(r *http.Request) *DevHTTPRequestDto {
+	return &DevHTTPRequestDto{
 		Host:       r.Host,
 		Method:     r.Method,
 		RequestURI: r.RequestURI,

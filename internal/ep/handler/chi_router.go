@@ -55,11 +55,11 @@ func (cr *AppChiRouter) setupMiddleware(auditIncome audit.IncomePublisher, logge
 		// POST /
 		iter14.NewAuthIter14PathMatcher(http.MethodPost, "/", mwareapp.PatternPostRoot, http.StatusUnauthorized, http.StatusUnauthorized, http.StatusInternalServerError),
 		// POST /api/shorten
-		iter14.NewAuthIter14PathMatcher(http.MethodPost, "/api/shorten", mwareapp.PatternPostApiShorten, http.StatusUnauthorized, http.StatusUnauthorized, http.StatusInternalServerError),
+		iter14.NewAuthIter14PathMatcher(http.MethodPost, "/api/shorten", mwareapp.PatternPostAPIShorten, http.StatusUnauthorized, http.StatusUnauthorized, http.StatusInternalServerError),
 		// POST /api/shorten/batch
-		iter14.NewAuthIter14PathMatcher(http.MethodPost, "/api/shorten/batch", mwareapp.PatternPostApiShortenBatch, http.StatusUnauthorized, http.StatusUnauthorized, http.StatusInternalServerError),
+		iter14.NewAuthIter14PathMatcher(http.MethodPost, "/api/shorten/batch", mwareapp.PatternPostAPIShortenBatch, http.StatusUnauthorized, http.StatusUnauthorized, http.StatusInternalServerError),
 		// GET /api/user/urls
-		iter14.NewAuthIter14PathMatcher(http.MethodGet, "/api/user/urls", mwareapp.PatternGetApiUserUrls, http.StatusNoContent, http.StatusUnauthorized, http.StatusInternalServerError),
+		iter14.NewAuthIter14PathMatcher(http.MethodGet, "/api/user/urls", mwareapp.PatternGetAPIUserUrls, http.StatusNoContent, http.StatusUnauthorized, http.StatusInternalServerError),
 	}, logger), logger).Iter14Auth)
 	// jwt auth retriever
 	cr.router.Use(auth.NewJWTAuthRetriever(logger).AuthRetriever)
@@ -77,7 +77,7 @@ func (cr *AppChiRouter) setupMiddleware(auditIncome audit.IncomePublisher, logge
 	cr.router.Use(mwareaudit.NewIncomeAuditMiddleware(mwareaudit.NewIncomeAuditPathMatchers([]*mwareaudit.IncomeAuditPathMatcher{
 		mwareaudit.NewIncomeAuditPathMatcher(http.MethodGet, "/", mwareapp.PatternGetRoot, mwareaudit.OriginalURLExtractGetRoot),
 		mwareaudit.NewIncomeAuditPathMatcher(http.MethodPost, "/", mwareapp.PatternPostRoot, mwareaudit.OriginalURLExtractPostRoot),
-		mwareaudit.NewIncomeAuditPathMatcher(http.MethodPost, "/api/shorten", mwareapp.PatternPostApiShorten, mwareaudit.OriginalURLExtractPostApiShorten),
+		mwareaudit.NewIncomeAuditPathMatcher(http.MethodPost, "/api/shorten", mwareapp.PatternPostAPIShorten, mwareaudit.OriginalURLExtractPostAPIShorten),
 	}), auditIncome, logger).Audit)
 	// recoverer
 	cr.router.Use(middleware.Recoverer)

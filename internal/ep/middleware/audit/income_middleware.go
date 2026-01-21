@@ -56,7 +56,7 @@ func (ia *IncomeAuditMiddleware) Audit(next http.Handler) http.Handler {
 
 				// business logic
 				if utils.IsSuccess(iarw.Info.StatusCode) || utils.IsRedirection(iarw.Info.StatusCode) {
-					var data []byte = make([]byte, 0)
+					var data = make([]byte, 0)
 					if utils.IsSuccess(iarw.Info.StatusCode) {
 						data = append(data, originalBody...)
 					} else if utils.IsRedirection(iarw.Info.StatusCode) {
