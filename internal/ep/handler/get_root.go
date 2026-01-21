@@ -34,5 +34,6 @@ func (cr *AppChiRouter) getRoot(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	// 307
+	rw.Header().Set("Content-Type", "plain/text")
 	http.Redirect(rw, r, res, http.StatusTemporaryRedirect)
 }

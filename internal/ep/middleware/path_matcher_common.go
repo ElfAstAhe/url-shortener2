@@ -2,7 +2,7 @@ package middleware
 
 // All path watch patterns
 const (
-	PatternGetRoot             string = `/(?!.*/)`
+	PatternGetRoot             string = `/[^/]*$`
 	PatternPostRoot            string = `/$`
 	PatternGetPing             string = `/ping$`
 	PatternPostApiShorten      string = `/api/shorten$`

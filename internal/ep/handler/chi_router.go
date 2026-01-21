@@ -7,8 +7,8 @@ import (
 	"github.com/ElfAstAhe/url-shortener2/internal/app/config"
 	"github.com/ElfAstAhe/url-shortener2/internal/bll/service/audit"
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/facade"
-	appmware "github.com/ElfAstAhe/url-shortener2/internal/ep/middleware"
-	auditmware "github.com/ElfAstAhe/url-shortener2/internal/ep/middleware/audit"
+	mwareapp "github.com/ElfAstAhe/url-shortener2/internal/ep/middleware"
+	mwareaudit "github.com/ElfAstAhe/url-shortener2/internal/ep/middleware/audit"
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/middleware/auth"
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/middleware/compress"
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/middleware/iter14"
@@ -53,13 +53,13 @@ func (cr *AppChiRouter) setupMiddleware(auditIncome audit.IncomePublisher, logge
 	// jwt auth iter14
 	cr.router.Use(iter14.NewJWTAuthIter14(iter14.NewAuthIter14PathMatchers([]*iter14.AuthIter14PathMatcher{
 		// POST /
-		iter14.NewAuthIter14PathMatcher(http.MethodPost, "/", appmware.PatternPostRoot, http.StatusUnauthorized, http.StatusUnauthorized, http.StatusInternalServerError),
+		iter14.NewAuthIter14PathMatcher(http.MethodPost, "/", mwareapp.PatternPostRoot, http.StatusUnauthorized, http.StatusUnauthorized, http.StatusInternalServerError),
 		// POST /api/shorten
-		iter14.NewAuthIter14PathMatcher(http.MethodPost, "/api/shorten", appmware.PatternPostApiShorten, http.StatusUnauthorized, http.StatusUnauthorized, http.StatusInternalServerError),
+		iter14.NewAuthIter14PathMatcher(http.MethodPost, "/api/shorten", mwareapp.PatternPostApiShorten, http.StatusUnauthorized, http.StatusUnauthorized, http.StatusInternalServerError),
 		// POST /api/shorten/batch
-		iter14.NewAuthIter14PathMatcher(http.MethodPost, "/api/shorten/batch", appmware.PatternPostApiShortenBatch, http.StatusUnauthorized, http.StatusUnauthorized, http.StatusInternalServerError),
+		iter14.NewAuthIter14PathMatcher(http.MethodPost, "/api/shorten/batch", mwareapp.PatternPostApiShortenBatch, http.StatusUnauthorized, http.StatusUnauthorized, http.StatusInternalServerError),
 		// GET /api/user/urls
-		iter14.NewAuthIter14PathMatcher(http.MethodGet, "/api/user/urls", appmware.PatternGetApiUserUrls, http.StatusNoContent, http.StatusUnauthorized, http.StatusInternalServerError),
+		iter14.NewAuthIter14PathMatcher(http.MethodGet, "/api/user/urls", mwareapp.PatternGetApiUserUrls, http.StatusNoContent, http.StatusUnauthorized, http.StatusInternalServerError),
 	}, logger), logger).Iter14Auth)
 	// jwt auth retriever
 	cr.router.Use(auth.NewJWTAuthRetriever(logger).AuthRetriever)
@@ -74,10 +74,10 @@ func (cr *AppChiRouter) setupMiddleware(auditIncome audit.IncomePublisher, logge
 	// income/outcome logger
 	cr.router.Use(mwarelog.NewHTTPReqRespLogger(logger).LogReqRes)
 	// income audit
-	cr.router.Use(auditmware.NewIncomeAuditMiddleware(appmware.NewPathMatchers([]*appmware.PathMatcher{
-		appmware.NewPathMatcher(http.MethodGet, "/", appmware.PatternGetRoot),
-		appmware.NewPathMatcher(http.MethodPost, "/", appmware.PatternPostRoot),
-		appmware.NewPathMatcher(http.MethodPost, "/api/shorten", appmware.PatternPostApiShorten),
+	cr.router.Use(mwareaudit.NewIncomeAuditMiddleware(mwareaudit.NewIncomeAuditPathMatchers([]*mwareaudit.IncomeAuditPathMatcher{
+		mwareaudit.NewIncomeAuditPathMatcher(http.MethodGet, "/", mwareapp.PatternGetRoot, mwareaudit.OriginalURLExtractGetRoot),
+		mwareaudit.NewIncomeAuditPathMatcher(http.MethodPost, "/", mwareapp.PatternPostRoot, mwareaudit.OriginalURLExtractPostRoot),
+		mwareaudit.NewIncomeAuditPathMatcher(http.MethodPost, "/api/shorten", mwareapp.PatternPostApiShorten, mwareaudit.OriginalURLExtractPostApiShorten),
 	}), auditIncome, logger).Audit)
 	// recoverer
 	cr.router.Use(middleware.Recoverer)
