@@ -28,6 +28,7 @@ type AppChiRouter struct {
 }
 
 func NewAppChiRouter(toolFacade facade.ToolFacade, shortenFacade facade.ShortenFacade, userFacade facade.UserFacade, auditIncome audit.IncomePublisher, conf *config.Config, logger logger.Logger) *AppChiRouter {
+	// new router
 	res := &AppChiRouter{
 		router:        chi.NewRouter(),
 		log:           logger.GetLogger("app router"),
@@ -37,7 +38,11 @@ func NewAppChiRouter(toolFacade facade.ToolFacade, shortenFacade facade.ShortenF
 		userFacade:    userFacade,
 	}
 
+	// setup middleware
 	res.setupMiddleware(auditIncome, logger)
+	// mount
+	res.router.Mount("/debug", middleware.Profiler())
+	// routes
 	res.setupRoutes()
 
 	return res
@@ -107,16 +112,6 @@ func (cr *AppChiRouter) setupRoutes() {
 				r.Route("/urls", func(r chi.Router) {
 					r.Get("/", cr.getAPIUserUrls)
 					r.Delete("/", cr.deleteAPIUserUrls)
-				})
-			})
-		})
-
-		// debug sub router
-		r.Route("/debug", func(r chi.Router) {
-			// pprof
-			r.Route("/pprof", func(r chi.Router) {
-				r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
-					http.DefaultServeMux.ServeHTTP(w, r)
 				})
 			})
 		})

@@ -26,3 +26,4 @@ vendor/
 /cmd/shortener/audit_income.txt
 /cmd/audit_echo/audit_echo
 /cmd/shortener/income_audit.log
+/cmd/shortener/income-audit.log
