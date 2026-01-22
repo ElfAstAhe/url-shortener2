@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"net/http"
+	_ "net/http/pprof"
 	"os"
 
 	"github.com/ElfAstAhe/url-shortener2/internal/app/bootstrap"

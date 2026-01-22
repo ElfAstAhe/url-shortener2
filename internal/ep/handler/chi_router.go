@@ -110,5 +110,15 @@ func (cr *AppChiRouter) setupRoutes() {
 				})
 			})
 		})
+
+		// debug sub router
+		r.Route("/debug", func(r chi.Router) {
+			// pprof
+			r.Route("/pprof", func(r chi.Router) {
+				r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
+					http.DefaultServeMux.ServeHTTP(w, r)
+				})
+			})
+		})
 	})
 }
