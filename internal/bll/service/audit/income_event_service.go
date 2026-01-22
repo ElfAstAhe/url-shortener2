@@ -2,7 +2,6 @@ package audit
 
 import (
 	"context"
-	"sync"
 
 	"github.com/ElfAstAhe/url-shortener2/pkg/client/audit/dto"
 	"github.com/ElfAstAhe/url-shortener2/pkg/logger"
@@ -11,14 +10,14 @@ import (
 )
 
 type IncomeEventService struct {
-	once      sync.Once
 	observers map[string]IncomeObserver
 	log       logger.Logger
 }
 
 func NewIncomeEventService(log logger.Logger) *IncomeEventService {
 	return &IncomeEventService{
-		log: log,
+		observers: make(map[string]IncomeObserver),
+		log:       log,
 	}
 }
 
@@ -39,18 +38,10 @@ func (i *IncomeEventService) Close() error {
 // IncomePublisher interface
 
 func (i *IncomeEventService) Register(observer IncomeObserver) {
-	i.once.Do(func() {
-		i.observers = make(map[string]IncomeObserver)
-	})
-
 	i.observers[observer.GetID()] = observer
 }
 
 func (i *IncomeEventService) Deregister(observer IncomeObserver) {
-	i.once.Do(func() {
-		i.observers = make(map[string]IncomeObserver)
-	})
-
 	delete(i.observers, observer.GetID())
 }
 
