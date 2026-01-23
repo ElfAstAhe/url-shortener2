@@ -22,23 +22,27 @@ func TestNewJWTStringFromUserInfo_AllCases(t *testing.T) {
 	})
 }
 
-func BenchNewJWTStringFromUserInfo(b *testing.B) {
+func BenchmarkNewJWTStringFromUserInfo(b *testing.B) {
 	b.StopTimer()
 
 	type result struct {
 		jwtStr string
 		err    error
 	}
-
-	var data = make([]result, 0, b.N)
+	maxSize := 1_000
 
 	b.StartTimer()
 	// act
 	b.Run("generating a new JWT string", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			resJWT, err := NewJWTStringFromUserInfo(BuildRandomUserInfo())
-			data[i].jwtStr = resJWT
-			data[i].err = err
+			for j := 0; j < maxSize; j++ {
+				var data = make([]result, 0, maxSize)
+				var res = result{}
+				resJWT, _ := NewJWTStringFromUserInfo(BuildRandomUserInfo())
+				res.jwtStr = resJWT
+
+				data = append(data, res)
+			}
 		}
 	})
 }

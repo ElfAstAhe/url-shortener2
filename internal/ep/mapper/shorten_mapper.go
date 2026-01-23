@@ -28,7 +28,7 @@ func ShortenBatchResponseFromKeys(source map[string]string) ([]*dto.ShortenBatch
 	if len(source) == 0 {
 		return make([]*dto.ShortenBatchResponseItem, 0), nil
 	}
-	res := make([]*dto.ShortenBatchResponseItem, 0)
+	res := make([]*dto.ShortenBatchResponseItem, 0, len(source))
 	for key, value := range source {
 		res = append(res, &dto.ShortenBatchResponseItem{
 			CorrelationID: key,
@@ -68,10 +68,11 @@ func ShortenBatchFromDto(source []*dto.ShortenBatchCreateItem) (map[string]strin
 }
 
 func UserShortensFromModel(source map[string]string) ([]*dto.UserShorten, error) {
-	res := make([]*dto.UserShorten, 0)
 	if len(source) == 0 {
 		return nil, nil
 	}
+
+	res := make([]*dto.UserShorten, 0, len(source))
 	for key, value := range source {
 		res = append(res, dto.NewUserShorten(value, key))
 	}
