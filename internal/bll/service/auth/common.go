@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
-	errs "github.com/ElfAstAhe/url-shortener2/pkg/error"
 	"github.com/google/uuid"
+
+	errs "github.com/ElfAstAhe/url-shortener2/pkg/error"
 )
 
 const (

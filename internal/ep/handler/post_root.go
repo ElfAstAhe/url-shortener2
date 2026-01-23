@@ -5,11 +5,12 @@ import (
 	"errors"
 	"net/http"
 
+	"go.uber.org/zap"
+
 	"github.com/ElfAstAhe/url-shortener2/internal/bll/service/auth"
 	apperrs "github.com/ElfAstAhe/url-shortener2/internal/error"
 	"github.com/ElfAstAhe/url-shortener2/internal/utils"
 	errs "github.com/ElfAstAhe/url-shortener2/pkg/error"
-	"go.uber.org/zap"
 )
 
 func (cr *AppChiRouter) postRoot(rw http.ResponseWriter, r *http.Request) {

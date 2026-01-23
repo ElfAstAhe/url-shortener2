@@ -4,8 +4,9 @@ import (
 	"errors"
 	"net/url"
 
-	errs "github.com/ElfAstAhe/url-shortener2/internal/error"
 	"github.com/google/uuid"
+
+	errs "github.com/ElfAstAhe/url-shortener2/internal/error"
 )
 
 type ShortURI struct {

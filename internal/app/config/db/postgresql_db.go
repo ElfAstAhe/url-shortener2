@@ -4,8 +4,9 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/ElfAstAhe/url-shortener2/internal/app/config"
 	_ "github.com/jackc/pgx/v5/stdlib"
+
+	"github.com/ElfAstAhe/url-shortener2/internal/app/config"
 )
 
 type postgresqlDB struct {

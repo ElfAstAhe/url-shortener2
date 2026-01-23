@@ -5,13 +5,14 @@ import (
 	"errors"
 	"sync"
 
+	"github.com/google/uuid"
+	"golang.org/x/sync/errgroup"
+
 	"github.com/ElfAstAhe/url-shortener2/internal/app/config/db"
 	"github.com/ElfAstAhe/url-shortener2/internal/bll/model"
 	"github.com/ElfAstAhe/url-shortener2/internal/bll/repository"
 	apperrs "github.com/ElfAstAhe/url-shortener2/internal/error"
 	errs "github.com/ElfAstAhe/url-shortener2/pkg/error"
-	"github.com/google/uuid"
-	"golang.org/x/sync/errgroup"
 )
 
 type ShortURIInMemRepo struct {

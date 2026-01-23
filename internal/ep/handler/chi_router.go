@@ -4,6 +4,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+
 	"github.com/ElfAstAhe/url-shortener2/internal/app/config"
 	"github.com/ElfAstAhe/url-shortener2/internal/bll/service/audit"
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/facade"
@@ -14,8 +17,6 @@ import (
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/middleware/iter14"
 	mwarelog "github.com/ElfAstAhe/url-shortener2/internal/ep/middleware/logger"
 	"github.com/ElfAstAhe/url-shortener2/pkg/logger"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 )
 
 type AppChiRouter struct {

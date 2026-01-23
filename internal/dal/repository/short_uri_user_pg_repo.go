@@ -5,11 +5,12 @@ import (
 	"database/sql"
 	"errors"
 
+	"github.com/google/uuid"
+
 	"github.com/ElfAstAhe/url-shortener2/internal/app/config/db"
 	"github.com/ElfAstAhe/url-shortener2/internal/bll/model"
 	"github.com/ElfAstAhe/url-shortener2/internal/utils"
 	errs "github.com/ElfAstAhe/url-shortener2/pkg/error"
-	"github.com/google/uuid"
 )
 
 type ShortURIUserPgRepo struct {

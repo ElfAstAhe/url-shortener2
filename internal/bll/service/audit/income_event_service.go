@@ -3,10 +3,11 @@ package audit
 import (
 	"context"
 
-	"github.com/ElfAstAhe/url-shortener2/pkg/client/audit/dto"
-	"github.com/ElfAstAhe/url-shortener2/pkg/logger"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
+
+	"github.com/ElfAstAhe/url-shortener2/pkg/client/audit/dto"
+	"github.com/ElfAstAhe/url-shortener2/pkg/logger"
 )
 
 type IncomeEventService struct {

@@ -5,9 +5,10 @@ import (
 	"net/http"
 	"time"
 
-	errs "github.com/ElfAstAhe/url-shortener2/pkg/error"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
+
+	errs "github.com/ElfAstAhe/url-shortener2/pkg/error"
 )
 
 type AppClaims struct {

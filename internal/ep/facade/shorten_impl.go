@@ -8,13 +8,14 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/go-chi/chi/v5"
+
 	"github.com/ElfAstAhe/url-shortener2/internal/bll/service"
 	"github.com/ElfAstAhe/url-shortener2/internal/bll/service/auth"
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/dto"
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/mapper"
 	apperrs "github.com/ElfAstAhe/url-shortener2/internal/error"
 	errs "github.com/ElfAstAhe/url-shortener2/pkg/error"
-	"github.com/go-chi/chi/v5"
 )
 
 type ShortenFacadeImpl struct {

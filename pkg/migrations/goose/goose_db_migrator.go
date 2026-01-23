@@ -4,9 +4,10 @@ import (
 	"context"
 	"database/sql"
 
+	"github.com/pressly/goose/v3"
+
 	errs "github.com/ElfAstAhe/url-shortener2/pkg/error"
 	"github.com/ElfAstAhe/url-shortener2/pkg/logger"
-	"github.com/pressly/goose/v3"
 )
 
 // GooseDBMigrator is implementation of DBMigrator interface

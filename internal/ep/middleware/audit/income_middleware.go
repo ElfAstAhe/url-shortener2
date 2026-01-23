@@ -7,12 +7,13 @@ import (
 	"net/http"
 	"time"
 
+	"go.uber.org/zap"
+
 	"github.com/ElfAstAhe/url-shortener2/internal/bll/service/audit"
 	"github.com/ElfAstAhe/url-shortener2/internal/bll/service/auth"
 	"github.com/ElfAstAhe/url-shortener2/pkg/client/audit/dto"
 	"github.com/ElfAstAhe/url-shortener2/pkg/logger"
 	"github.com/ElfAstAhe/url-shortener2/pkg/utils"
-	"go.uber.org/zap"
 )
 
 type IncomeAuditMiddleware struct {

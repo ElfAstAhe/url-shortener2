@@ -1,8 +1,9 @@
 package model
 
 import (
-	errs "github.com/ElfAstAhe/url-shortener2/pkg/error"
 	"github.com/google/uuid"
+
+	errs "github.com/ElfAstAhe/url-shortener2/pkg/error"
 )
 
 type ShortURIUser struct {

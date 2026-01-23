@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/ElfAstAhe/url-shortener2/internal/utils"
 	"go.uber.org/zap"
+
+	"github.com/ElfAstAhe/url-shortener2/internal/utils"
 )
 
 func (cr *AppChiRouter) postAPIShortenBatch(rw http.ResponseWriter, r *http.Request) {

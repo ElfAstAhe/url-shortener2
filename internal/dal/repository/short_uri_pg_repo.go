@@ -6,13 +6,14 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/google/uuid"
+
 	"github.com/ElfAstAhe/url-shortener2/internal/app/config/db"
 	"github.com/ElfAstAhe/url-shortener2/internal/bll/model"
 	"github.com/ElfAstAhe/url-shortener2/internal/bll/repository"
 	apperrs "github.com/ElfAstAhe/url-shortener2/internal/error"
 	"github.com/ElfAstAhe/url-shortener2/internal/utils"
 	errs "github.com/ElfAstAhe/url-shortener2/pkg/error"
-	"github.com/google/uuid"
 )
 
 const (
