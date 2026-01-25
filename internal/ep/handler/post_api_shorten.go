@@ -24,7 +24,7 @@ func (cr *AppChiRouter) postAPIShorten(rw http.ResponseWriter, r *http.Request) 
 	}
 	defer utils.CloseOnly(req.Body)
 
-	res, err := cr.shortenFacade.CreateURL(r.Context(), req.Body)
+	res, err := cr.shortenFacade.CreateURL(req.Context(), req.Body)
 	if err != nil {
 		// 400
 		if errors.As(err, &errs.AppInvalidArgumentErr) {
