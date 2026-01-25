@@ -15,9 +15,16 @@ func (cr *AppChiRouter) postAPIShorten(rw http.ResponseWriter, r *http.Request) 
 	cr.log.Info("postAPIShorten start")
 	defer cr.log.Info("postAPIShorten finish")
 
-	defer utils.CloseOnly(r.Body)
+	// Attention! Iter 14 only, specific auth business logic
+	req, err := cr.setupIter14JWTOrSendError(rw, r)
+	if err != nil {
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
 
-	res, err := cr.shortenFacade.CreateURL(r.Context(), r.Body)
+		return
+	}
+	defer utils.CloseOnly(req.Body)
+
+	res, err := cr.shortenFacade.CreateURL(r.Context(), req.Body)
 	if err != nil {
 		// 400
 		if errors.As(err, &errs.AppInvalidArgumentErr) {
@@ -40,6 +47,7 @@ func (cr *AppChiRouter) postAPIShorten(rw http.ResponseWriter, r *http.Request) 
 	}
 
 	// 201
+	rw.Header().Set("Content-Type", "application/json")
 	cr.sendRespAPIShortenCreate(res, http.StatusCreated, rw)
 }
 

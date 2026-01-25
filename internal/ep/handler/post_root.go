@@ -24,7 +24,7 @@ func (cr *AppChiRouter) postRoot(rw http.ResponseWriter, r *http.Request) {
 
 		return
 	}
-	defer utils.CloseOnly(r.Body)
+	defer utils.CloseOnly(req.Body)
 
 	res, err := cr.shortenFacade.Store(req.Context(), req.Body)
 	if err != nil && !errors.As(err, &apperrs.BllConflictErr) {
