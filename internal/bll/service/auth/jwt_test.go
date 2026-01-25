@@ -29,9 +29,10 @@ func BenchmarkNewJWTStringFromUserInfo(b *testing.B) {
 		jwtStr string
 		err    error
 	}
-	maxSize := 1_000
+	maxSize := 10_000
 
 	b.StartTimer()
+	var cnt = 0
 	// act
 	b.Run("generating a new JWT string", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
@@ -42,7 +43,11 @@ func BenchmarkNewJWTStringFromUserInfo(b *testing.B) {
 				res.jwtStr = resJWT
 
 				data = append(data, res)
+
+				cnt += len(data)
 			}
 		}
+
+		b.ReportMetric(float64(cnt), "total/cnt")
 	})
 }
