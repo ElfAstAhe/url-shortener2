@@ -89,9 +89,11 @@ func (app *App) loadInMemData() error {
 func (app *App) saveInMemData() error {
 	log := app.Log.GetLogger("inMem")
 	if cache, ok := app.db.(db.InMemoryCache); ok {
+		log.Info("Save data to storage...")
 		if err := app.saveShortURIData(app.conf.StoragePath, cache); err != nil {
 			log.Errorf("error save shortURI data: [%v]", err)
 		}
+		log.Info("Save data to storage user...")
 		if err := app.saveShortURIUserData(app.conf.StorageUserPath, cache); err != nil {
 			log.Errorf("error save shortURI user data: [%v]", err)
 		}

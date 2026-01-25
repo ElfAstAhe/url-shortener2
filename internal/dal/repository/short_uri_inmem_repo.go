@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"errors"
 	"sync"
 
 	"github.com/google/uuid"
@@ -99,7 +98,7 @@ func (ims *ShortURIInMemRepo) Create(ctx context.Context, userID string, entity 
 			return nil, err
 		}
 
-		return find, errors.New("short URI already exists")
+		return find, nil
 	}
 
 	newID, err := uuid.NewRandom()
@@ -325,7 +324,7 @@ func (ims *ShortURIInMemRepo) addUser(ctx context.Context, ID string, userID str
 		return err
 	}
 	if find != nil {
-		return nil
+		return errs.NewModelAlreadyExistsError("short_uri_users", ID)
 	}
 
 	entity, err := model.NewShortURIUser(ID, userID)

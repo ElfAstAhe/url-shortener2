@@ -75,6 +75,7 @@ func (w *ShortURLStorageWriter) Close() error {
 }
 
 func (w *ShortURLStorageWriter) SaveData(cache map[string]*model.ShortURI) error {
+	w.log.Infof("Short URI length [%d]", len(cache))
 	for id, shortURL := range cache {
 		w.log.Infof("Saving short URI [%s] to [%s]", id, w.file.Name())
 		data, err := json.Marshal(shortURL)

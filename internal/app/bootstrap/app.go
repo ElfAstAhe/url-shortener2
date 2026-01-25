@@ -162,13 +162,13 @@ func (app *App) Run() error {
 func (app *App) Close() error {
 	log := app.Log.GetLogger("bootstrap close")
 
-	log.Info("close db connection")
-	if err := db.CloseDB(app.db); err != nil {
+	log.Info("save in mem data")
+	if err := app.saveInMemData(); err != nil {
 		return err
 	}
 
-	log.Info("save in mem data")
-	if err := app.saveInMemData(); err != nil {
+	log.Info("close db connection")
+	if err := db.CloseDB(app.db); err != nil {
 		return err
 	}
 
