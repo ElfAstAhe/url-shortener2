@@ -19,25 +19,47 @@ import (
 	"github.com/ElfAstAhe/url-shortener2/pkg/logger"
 )
 
+// App - структура со всеми dependency приложения
 type App struct {
-	ctx               context.Context
-	cancelFunc        context.CancelFunc
-	WG                sync.WaitGroup
-	db                db.DB
-	conf              *config.Config
-	Log               logger.Logger
-	connCheckRepo     irepo.DBConnCheckRepository
-	shortURIUserRepo  irepo.ShortURIUserRepository
-	shortURIRepo      irepo.ShortURIRepository
-	shorterService    service.Shorter
+	// контекст приложения с cancellation методом
+	ctx context.Context
+	// cancellation метод
+	cancelFunc context.CancelFunc
+	// WG - рабочая группа приложения
+	WG sync.WaitGroup
+	// БД
+	db db.DB
+	// конфигурация
+	conf *config.Config
+	// логирование
+	Log logger.Logger
+	// репо проверки соединения с БД
+	connCheckRepo irepo.DBConnCheckRepository
+	// репо для таблицы short_url_users
+	shortURIUserRepo irepo.ShortURIUserRepository
+	// репо для таблицы short_urls
+	shortURIRepo irepo.ShortURIRepository
+	// сервис для работы с short urls (бизнеслогика)
+	shorterService service.Shorter
+	// сервис логирования входящих запросов
 	auditEventService audit.IncomePublisher
-	toolFacade        facade.ToolFacade
-	shortenFacade     facade.ShortenFacade
-	userFacade        facade.UserFacade
-	router            handler.AppRouter
-	httpServer        *http.Server
+	// инструментальный фасад
+	toolFacade facade.ToolFacade
+	// short urls фасад
+	shortenFacade facade.ShortenFacade
+	// юзер фасад
+	userFacade facade.UserFacade
+	// роутер (марщрутизация и http хэндлеры)
+	router handler.AppRouter
+	// http сервер
+	httpServer *http.Server
 }
 
+// NewApp - конструктор структуры App
+//
+// app instance
+//
+//	app := bootstrap.NewApp()
 func NewApp() *App {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &App{
@@ -47,6 +69,15 @@ func NewApp() *App {
 	}
 }
 
+// Init - обязательный метод инициализации
+//
+// app initialization
+//
+//	if err := app.Init(); err != nil {
+//		logger.Errorf("app initialization failed [%v]", err)
+//
+//		os.Exit(1)
+//	}
 func (app *App) Init() error {
 	log := app.Log.GetLogger("bootstrap init")
 	//    defer _utl.CloseOnly(logger.(io.Closer))
@@ -99,6 +130,11 @@ func (app *App) Init() error {
 	return nil
 }
 
+// Run - метод запуска приложения
+//
+//	if err := app.Run(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+//	    logger.Errorf("app run error [%v]", err)
+//	}
 func (app *App) Run() error {
 	log := app.Log.GetLogger("bootstrap run")
 	//    defer _utl.CloseOnly(logger.(io.Closer))
@@ -116,6 +152,13 @@ func (app *App) Run() error {
 	return nil
 }
 
+// Close - метод освобождения ресурсов приложения
+//
+//	if err := app.Close(); err != nil {
+//		logger.Errorf("app close error [%v]", err)
+//
+//		os.Exit(1)
+//	}
 func (app *App) Close() error {
 	log := app.Log.GetLogger("bootstrap close")
 
@@ -137,6 +180,7 @@ func (app *App) Close() error {
 	return nil
 }
 
+// gracefulShutdown - внутренний метод "агрессивного" закрытия приложения (ctrl+c)
 func (app *App) gracefulShutdown() {
 	// channel
 	sig := make(chan os.Signal, 1)

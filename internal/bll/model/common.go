@@ -6,15 +6,31 @@ import (
 	"net/url"
 )
 
+// CorrelationUrls - URL для преобразования, где:
+//
+// key - correlationID
+//
+// value - URL
 type CorrelationUrls map[string]string
 
+// CorrelationShorts - URL после преобразования, где:
+//
+// key - correlationID
+//
+// value - short URL
 type CorrelationShorts map[string]string
 
+// UserShorts - список пользовательских сокращённых URL, где:
+//
+// key - original URL
+//
+// value - short URL
 type UserShorts map[string]string
 
-// UserBatchDeletes key is user id values is short uri keys
+// UserBatchDeletes - список keys для удаления short URL
 type UserBatchDeletes []string
 
+// CustomURL - URL для серияализации
 type CustomURL struct {
 	URL *url.URL
 }
