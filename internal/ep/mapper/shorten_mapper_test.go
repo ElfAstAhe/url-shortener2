@@ -5,7 +5,42 @@ import (
 	"testing"
 
 	"github.com/ElfAstAhe/url-shortener2/internal/bll/model"
+	"github.com/ElfAstAhe/url-shortener2/internal/ep/dto"
+	"github.com/ElfAstAhe/url-shortener2/internal/utils"
+	"github.com/stretchr/testify/assert"
 )
+
+func TestShortenCreateResponseFromKey_AllCases(t *testing.T) {
+	// prepare
+	baseURL := "https://www.example.com"
+	key := "123"
+	expected := &dto.ShortenCreateResponse{
+		Result: utils.BuildNewURI(baseURL, key),
+	}
+	// act
+	t.Run("success, got result", func(t *testing.T) {
+		// act
+		actual, err := ShortenCreateResponseFromKey(baseURL, key)
+		// assert
+		assert.NoError(t, err)
+		assert.Equal(t, *expected, *actual)
+	})
+	// act
+	t.Run("fail, empty key", func(t *testing.T) {
+		// act
+		actual, err := ShortenCreateResponseFromKey(baseURL, "")
+		// assert
+		assert.NoError(t, err)
+		assert.Nil(t, actual)
+	})
+	t.Run("fail, empty base URL", func(t *testing.T) {
+		// act
+		actual, err := ShortenCreateResponseFromKey("", key)
+		// assert
+		assert.NoError(t, err)
+		assert.Nil(t, actual)
+	})
+}
 
 func BenchmarkShortenBatchResponseFromKeys(b *testing.B) {
 	// prepare

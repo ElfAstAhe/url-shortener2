@@ -1,13 +1,15 @@
 package mapper
 
 import (
+	"strings"
+
 	"github.com/ElfAstAhe/url-shortener2/internal/bll/model"
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/dto"
 	"github.com/ElfAstAhe/url-shortener2/internal/utils"
 )
 
 func ShortenCreateResponseFromKey(baseURL string, key string) (*dto.ShortenCreateResponse, error) {
-	if key == "" {
+	if strings.TrimSpace(key) == "" || strings.TrimSpace(baseURL) == "" {
 		return nil, nil
 	}
 
