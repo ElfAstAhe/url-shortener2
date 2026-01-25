@@ -17,11 +17,11 @@ func (cr *AppChiRouter) getAPIUserUrls(rw http.ResponseWriter, r *http.Request) 
 	}
 
 	// 200
+	rw.Header().Set("Content-Type", "application/json")
 	rw.WriteHeader(http.StatusOK)
 	if len(res) == 0 {
 		rw.WriteHeader(http.StatusNoContent)
 	}
-	rw.Header().Set("Content-Type", "application/json")
 
 	enc := json.NewEncoder(rw)
 	if err := enc.Encode(res); err != nil {
