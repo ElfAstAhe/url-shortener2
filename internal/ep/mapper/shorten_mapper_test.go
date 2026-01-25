@@ -128,9 +128,7 @@ func BenchmarkUserShortensFromModel(b *testing.B) {
 }
 
 func buildShortURI(id string, url string, key string) *model.ShortURI {
-	res, err := model.NewShortURIFull(id, url, key)
-	if err != nil {
-		// omit error
-	}
+	res, _ := model.NewShortURIFull(id, url, key)
+
 	return res
 }
