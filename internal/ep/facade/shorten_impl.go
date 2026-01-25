@@ -126,16 +126,19 @@ func (sf *ShortenFacadeImpl) Store(ctx context.Context, income io.Reader) (strin
 	}
 
 	key, err := sf.service.Store(ctx, userInfo.UserID, string(data))
-	if err != nil {
-		return key, err
-	}
-
-	res, err := mapper.ShortenCreateResponseFromKey(sf.baseURL, key)
-	if err != nil {
+	if err != nil && key == "" {
 		return "", err
 	}
 
-	return res.Result, nil
+	res, transErr := mapper.ShortenCreateResponseFromKey(sf.baseURL, key)
+	if transErr != nil {
+		return "", transErr
+	}
+	if res == nil {
+		return "", errs.NewModelNotExistsError("shortURI", key)
+	}
+
+	return res.Result, err
 }
 
 func (sf *ShortenFacadeImpl) getCRFromIncome(income io.Reader) (*dto.ShortenCreateRequest, error) {
