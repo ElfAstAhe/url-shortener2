@@ -16,6 +16,7 @@ import (
 	"github.com/ElfAstAhe/url-shortener2/internal/bll/service/audit"
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/facade"
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/handler"
+	_ "github.com/ElfAstAhe/url-shortener2/migrations"
 	"github.com/ElfAstAhe/url-shortener2/pkg/logger"
 )
 
