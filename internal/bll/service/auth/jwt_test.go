@@ -27,7 +27,8 @@ func BenchmarkNewJWTStringFromUserInfo(b *testing.B) {
 
 	type result struct {
 		jwtStr string
-		err    error
+		//lint:ignore U1000 это грёбаные тесты
+		err error
 	}
 	maxSize := 10_000
 
