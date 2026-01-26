@@ -1,4 +1,4 @@
-name: go vet test
+name: go vet exit
 
 on:
   pull_request:

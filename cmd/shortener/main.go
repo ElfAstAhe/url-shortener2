@@ -4,7 +4,6 @@ import (
 	"errors"
 	"net/http"
 	_ "net/http/pprof"
-	"os"
 
 	"github.com/ElfAstAhe/url-shortener2/internal/app/bootstrap"
 )
@@ -20,8 +19,10 @@ func main() {
 	logger.Info("app init")
 	if err := app.Init(); err != nil {
 		logger.Errorf("app initialization failed [%v]", err)
+		defer app.Close()
 
-		os.Exit(1)
+		//		os.Exit(1)
+		panic(errors.New("app initialization failed"))
 	}
 
 	// app run
@@ -37,9 +38,11 @@ func main() {
 	if err := app.Close(); err != nil {
 		logger.Errorf("app close error [%v]", err)
 
-		os.Exit(1)
+		//		os.Exit(1)
+		panic(errors.New("app close failed"))
+		return
 	}
 
 	logger.Info("app shutdown")
-	os.Exit(0)
+	//	os.Exit(0)
 }
