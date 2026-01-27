@@ -52,7 +52,6 @@ func main() {
 
 		//		os.Exit(1)
 		panic(errors.New("app close failed"))
-		return
 	}
 
 	logger.Info("app shutdown")
