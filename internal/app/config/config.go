@@ -34,12 +34,13 @@ type Config struct {
 	AuditIncomeLocal  bool
 	AuditURL          string `json:"audit_url,omitempty" env:"AUDIT_URL"`
 	AuditIncomeRemote bool
+	EnableHTTPS       bool `json:"enable_https,omitempty"`
 }
 
 // Flags
 const (
 	FlagAppName         string = "p"
-	FlagProjectStage    string = "s"
+	FlagProjectStage    string = "stage"
 	FlagLogLevel        string = "l"
 	FlagBaseURL         string = "b"
 	FlagDBKind          string = "k"
@@ -49,6 +50,7 @@ const (
 	FlagStorageUserPath string = "fu"
 	FlagAuditFile       string = "audit-file"
 	FlagAuditURL        string = "audit-url"
+	FlagEnableHTTPS     string = "s"
 )
 
 // Environment variables
@@ -60,6 +62,7 @@ const (
 	EnvDatabaseDSN         string = "DATABASE_DSN"
 	EnvAuditFile           string = "AUDIT_FILE"
 	EnvAuditURL            string = "AUDIT_URL"
+	EnvEnableHTTPS         string = "ENABLE_HTTPS"
 )
 
 func NewConfig() *Config {
@@ -82,6 +85,7 @@ func newConfig(appName string, projectStage string, logLevel string, baseURL str
 		StoragePath:       storagePath,
 		AuditIncomeLocal:  false,
 		AuditIncomeRemote: false,
+		EnableHTTPS:       false,
 	}
 }
 
@@ -121,9 +125,23 @@ func (c *Config) loadCli() error {
 	c.AuditIncomeLocal = strings.TrimSpace(c.AuditFile) != ""
 	c.AuditIncomeRemote = strings.TrimSpace(c.AuditURL) != ""
 
+	c.EnableHTTPS = c.cliFlagExists(FlagEnableHTTPS)
+
 	fmt.Printf("Config after CLI: [%+v]\r\n", c)
 
 	return nil
+}
+
+func (c *Config) cliFlagExists(name string) bool {
+	res := false
+
+	flag.Visit(func(f *flag.Flag) {
+		if f.Name == name {
+			res = true
+		}
+	})
+
+	return res
 }
 
 func (c *Config) loadEnv() error {
@@ -139,6 +157,8 @@ func (c *Config) loadEnv() error {
 
 	c.AuditIncomeLocal = strings.TrimSpace(c.AuditFile) != ""
 	c.AuditIncomeRemote = strings.TrimSpace(c.AuditURL) != ""
+
+	_, c.EnableHTTPS = os.LookupEnv(EnvEnableHTTPS)
 
 	fmt.Printf("Config after ENV: [%+v]\r\n", c)
 
@@ -173,4 +193,5 @@ func (c *Config) initFlags() {
 	flag.StringVar(&c.StorageUserPath, FlagStorageUserPath, DefaultStorageUserPath, "storage user path")
 	flag.StringVar(&c.AuditFile, FlagAuditFile, "", "audit file path")
 	flag.StringVar(&c.AuditURL, FlagAuditURL, "", "audit url")
+	flag.BoolVar(&c.EnableHTTPS, FlagEnableHTTPS, false, "enable https")
 }

@@ -146,13 +146,21 @@ func (app *App) Run() error {
 	go app.gracefulShutdown()
 
 	log.Info("start server...")
-	if err := app.httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+	if err := app.launchServer(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Errorf("Error starting server with error [%v]", err)
 
 		return err
 	}
 
 	return nil
+}
+
+func (app *App) launchServer() error {
+	if app.conf.EnableHTTPS {
+		return app.httpServer.ListenAndServeTLS("localhost.crt", "localhost.key")
+	}
+
+	return app.httpServer.ListenAndServe()
 }
 
 // Close - метод освобождения ресурсов приложения
