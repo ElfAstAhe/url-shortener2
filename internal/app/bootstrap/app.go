@@ -9,6 +9,8 @@ import (
 	"sync"
 	"syscall"
 
+	_ "expvar"
+
 	"github.com/ElfAstAhe/url-shortener2/internal/app/config"
 	"github.com/ElfAstAhe/url-shortener2/internal/app/config/db"
 	irepo "github.com/ElfAstAhe/url-shortener2/internal/bll/repository"
