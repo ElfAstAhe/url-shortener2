@@ -125,7 +125,9 @@ func (c *Config) loadCli() error {
 	c.AuditIncomeLocal = strings.TrimSpace(c.AuditFile) != ""
 	c.AuditIncomeRemote = strings.TrimSpace(c.AuditURL) != ""
 
-	c.EnableHTTPS = c.cliFlagExists(FlagEnableHTTPS)
+	if c.cliFlagExists(FlagEnableHTTPS) {
+		c.EnableHTTPS = true
+	}
 
 	fmt.Printf("Config after CLI: [%+v]\r\n", c)
 
@@ -158,7 +160,9 @@ func (c *Config) loadEnv() error {
 	c.AuditIncomeLocal = strings.TrimSpace(c.AuditFile) != ""
 	c.AuditIncomeRemote = strings.TrimSpace(c.AuditURL) != ""
 
-	_, c.EnableHTTPS = os.LookupEnv(EnvEnableHTTPS)
+	if _, ok := os.LookupEnv(EnvHTTPInterface); ok {
+		c.EnableHTTPS = true
+	}
 
 	fmt.Printf("Config after ENV: [%+v]\r\n", c)
 

@@ -156,9 +156,13 @@ func (app *App) Run() error {
 }
 
 func (app *App) launchServer() error {
+	log := app.Log.GetLogger("bootstrap server launch")
 	if app.conf.EnableHTTPS {
+		log.Info("enable https")
 		return app.httpServer.ListenAndServeTLS("localhost.crt", "localhost.key")
 	}
+
+	log.Info("enable http")
 
 	return app.httpServer.ListenAndServe()
 }
