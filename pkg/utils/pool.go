@@ -1,9 +1,5 @@
 package utils
 
-import (
-	"fmt"
-)
-
 // Resetable — интерфейс, требующий наличия метода Reset()
 type Resetable interface {
 	Reset()
@@ -51,9 +47,9 @@ func (p *Pool[T]) Get() T {
 // Перед возвратом объекта вызывается его метод Reset() для сброса состояния.
 // Если канал полон (достигнут лимит capacity), объект просто игнорируется
 // и сборщик мусора его утилизирует.
-func (p *Pool[T]) Put(obj T) {
+func (p *Pool[T]) Put(obj T) error {
 	if any(obj) == nil {
-		return
+		return nil
 	}
 
 	// САМЫЙ ВАЖНЫЙ ШАГ: Сброс состояния перед возвратом в пул.
@@ -61,10 +57,8 @@ func (p *Pool[T]) Put(obj T) {
 
 	select {
 	case p.poolChan <- obj:
-		// Объект успешно возвращен в канал
-		fmt.Printf("Object returned to the pool.\n")
+		return nil
 	default:
-		// Канал полон, объект не помещается в пул и будет утилизирован GC
-		fmt.Printf("Pool is full, dropping object.\n")
+		return NewPoolOvercrowded(cap(p.poolChan))
 	}
 }

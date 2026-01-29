@@ -33,7 +33,7 @@ type App struct {
 	// БД
 	db db.DB
 	// конфигурация
-	conf *config.Config
+	conf *config.AppConf
 	// логирование
 	Log logger.Logger
 	// репо проверки соединения с БД
@@ -63,11 +63,12 @@ type App struct {
 // app instance
 //
 //	app := bootstrap.NewApp()
-func NewApp() *App {
+func NewApp(conf *config.AppConf) *App {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &App{
 		ctx:        ctx,
 		cancelFunc: cancel,
+		conf:       conf,
 		Log:        logger.NewStartupZapLogger(),
 	}
 }
@@ -83,12 +84,11 @@ func NewApp() *App {
 //	}
 func (app *App) Init() error {
 	log := app.Log.GetLogger("bootstrap init")
-	//    defer _utl.CloseOnly(logger.(io.Closer))
 
-	log.Info("loading config")
-	if err := app.loadConfig(); err != nil {
-		return err
-	}
+	//log.Info("loading config")
+	//if err := app.loadConfig(); err != nil {
+	//	return err
+	//}
 
 	log.Info("init logger")
 	if err := app.initLogger(); err != nil {

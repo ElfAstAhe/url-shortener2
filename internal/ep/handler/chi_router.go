@@ -22,13 +22,13 @@ import (
 type AppChiRouter struct {
 	router        *chi.Mux
 	log           logger.Logger
-	conf          *config.Config
+	conf          *config.AppConf
 	toolFacade    facade.ToolFacade
 	shortenFacade facade.ShortenFacade
 	userFacade    facade.UserFacade
 }
 
-func NewAppChiRouter(toolFacade facade.ToolFacade, shortenFacade facade.ShortenFacade, userFacade facade.UserFacade, auditIncome audit.IncomePublisher, conf *config.Config, logger logger.Logger) *AppChiRouter {
+func NewAppChiRouter(toolFacade facade.ToolFacade, shortenFacade facade.ShortenFacade, userFacade facade.UserFacade, auditIncome audit.IncomePublisher, conf *config.AppConf, logger logger.Logger) *AppChiRouter {
 	// new router
 	res := &AppChiRouter{
 		router:        chi.NewRouter(),

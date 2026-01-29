@@ -6,7 +6,8 @@
 
   1 - ENV vars
   2 - CLI params
-  3 - Default values
+  3 - config file
+  4 - Default values
 */
 package config
 
@@ -16,65 +17,31 @@ import (
 	"os"
 	"strings"
 
+	errs "github.com/ElfAstAhe/url-shortener2/pkg/error"
 	"github.com/caarlos0/env/v6"
 	"go.uber.org/zap"
 )
 
-type Config struct {
+type AppConf struct {
 	AppName           string      `json:"app_name,omitempty"`
 	ProjectStage      string      `json:"project_stage,omitempty"`
 	LogLevel          string      `json:"log_level,omitempty"`
 	BaseURL           string      `json:"base_url,omitempty" env:"BASE_URL"`
-	HTTP              *HTTPConfig `json:"http,omitempty"`
-	DBKind            string      `json:"db_kind,omitempty"`
-	DBDsn             string      `json:"db_dsn,omitempty" env:"DATABASE_DSN"`
-	StoragePath       string      `json:"storage_path,omitempty" env:"FILE_STORAGE_PATH"`
+	HTTP              *HTTPConfig `json:"server_address,omitempty"`
+	DBKind            string      `json:"database_kind,omitempty"`
+	DBDsn             string      `json:"database_dsn,omitempty" env:"DATABASE_DSN"`
+	StoragePath       string      `json:"file_storage_path,omitempty" env:"FILE_STORAGE_PATH"`
 	StorageUserPath   string      `json:"storage_user_path,omitempty" env:"FILE_STORAGE_USER_PATH"`
 	AuditFile         string      `json:"audit_file,omitempty" env:"AUDIT_FILE"`
 	AuditIncomeLocal  bool
 	AuditURL          string `json:"audit_url,omitempty" env:"AUDIT_URL"`
 	AuditIncomeRemote bool
-	EnableHTTPS       bool `json:"enable_https,omitempty"`
+	EnableHTTPS       bool   `json:"enable_https,omitempty"`
+	configPath        string `env:"CONFIG"`
 }
 
-// Flags
-const (
-	FlagAppName         string = "p"
-	FlagProjectStage    string = "stage"
-	FlagLogLevel        string = "l"
-	FlagBaseURL         string = "b"
-	FlagDBKind          string = "k"
-	FlagHTTPInterface   string = "a"
-	FlagDBInterface     string = "d"
-	FlagStoragePath     string = "f"
-	FlagStorageUserPath string = "fu"
-	FlagAuditFile       string = "audit-file"
-	FlagAuditURL        string = "audit-url"
-	FlagEnableHTTPS     string = "s"
-)
-
-// Environment variables
-const (
-	EnvBaseURL             string = "BASE_URL"
-	EnvHTTPInterface       string = "SERVER_ADDR"
-	EnvStorageFilename     string = "FILE_STORAGE_PATH"
-	EnvStorageUserFilename string = "FILE_STORAGE_USER_PATH"
-	EnvDatabaseDSN         string = "DATABASE_DSN"
-	EnvAuditFile           string = "AUDIT_FILE"
-	EnvAuditURL            string = "AUDIT_URL"
-	EnvEnableHTTPS         string = "ENABLE_HTTPS"
-)
-
-func NewConfig() *Config {
-	var cfg = defaultConfig()
-
-	cfg.initFlags()
-
-	return cfg
-}
-
-func newConfig(appName string, projectStage string, logLevel string, baseURL string, HTTP *HTTPConfig, DBKind string, DBDsn string, storagePath string) *Config {
-	return &Config{
+func newConfig(appName string, projectStage string, logLevel string, baseURL string, HTTP *HTTPConfig, DBKind string, DBDsn string, storagePath string) *AppConf {
+	return &AppConf{
 		AppName:           appName,
 		ProjectStage:      projectStage,
 		LogLevel:          logLevel,
@@ -89,19 +56,22 @@ func newConfig(appName string, projectStage string, logLevel string, baseURL str
 	}
 }
 
-func defaultConfig() *Config {
+func DefaultConfig() *AppConf {
 	return newConfig(DefaultAppName, DefaultStage, DefaultLogLevel, DefaultBaseURL, DefaultHTTPConfig(), DefaultDBKind, DefaultDBDsn, DefaultStoragePath)
 }
 
-func (c *Config) LoadConfig() error {
+func GetAppConfig() (*AppConf, error) {
 	fmt.Println("Parse cli params")
-	var err = c.loadCli()
+	cliConf := intermediateConfig.loadCli()
+
+	fmt.Println("Parse env params")
+	envConf, err := intermediateConfig.loadEnv()
 	if err != nil {
 		return err
 	}
 
-	fmt.Println("Parse env params")
-	err = c.loadEnv()
+	fmt.Printf("Parse conf file params")
+	err = intermediateConfig.loadConf()
 	if err != nil {
 		return err
 	}
@@ -114,13 +84,32 @@ func (c *Config) LoadConfig() error {
 		c.AuditFile = DefaultAuditIncomePath
 	}
 
-	fmt.Printf("Config FINAL: [%+v]\r\n", c)
+	fmt.Printf("AppConf FINAL: [%+v]\r\n", c)
 
 	return nil
 }
 
-func (c *Config) loadCli() error {
+func (c *AppConf) loadConf() error {
+	// ToDo: implement
+
+	return nil
+}
+
+func (c *AppConf) loadCli() (*AppConf, err error) {
 	flag.Parse()
+	defer func() {
+		if r := recover(); r != nil {
+			err = errs.NewAppGeneralInvalidConfigError(fmt.Sprintf("load cli params, panic [%v]", r), nil)
+		}
+	}()
+
+	if strings.TrimSpace(c.DBDsn) == "" {
+		c.DBKind = DBKindInMemory
+	}
+
+	if !c.AuditIncomeLocal {
+		c.AuditFile = DefaultAuditIncomePath
+	}
 
 	c.AuditIncomeLocal = strings.TrimSpace(c.AuditFile) != ""
 	c.AuditIncomeRemote = strings.TrimSpace(c.AuditURL) != ""
@@ -129,12 +118,12 @@ func (c *Config) loadCli() error {
 		c.EnableHTTPS = true
 	}
 
-	fmt.Printf("Config after CLI: [%+v]\r\n", c)
+	fmt.Printf("AppConf after CLI: [%+v]\r\n", c)
 
-	return nil
+	return c.copy(), err
 }
 
-func (c *Config) cliFlagExists(name string) bool {
+func (c *AppConf) cliFlagExists(name string) bool {
 	res := false
 
 	flag.Visit(func(f *flag.Flag) {
@@ -146,15 +135,29 @@ func (c *Config) cliFlagExists(name string) bool {
 	return res
 }
 
-func (c *Config) loadEnv() error {
+func (c *AppConf) envVarExists(name string) bool {
+	_, exists := os.LookupEnv(name)
+
+	return exists
+}
+
+func (c *AppConf) loadEnv() (*AppConf, error) {
 	err := env.Parse(c)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = parseFlag(EnvHTTPInterface, c.HTTP)
 	if err != nil {
-		return err
+		return nil, err
+	}
+
+	if strings.TrimSpace(c.DBDsn) == "" {
+		c.DBKind = DBKindInMemory
+	}
+
+	if !c.AuditIncomeLocal {
+		c.AuditFile = DefaultAuditIncomePath
 	}
 
 	c.AuditIncomeLocal = strings.TrimSpace(c.AuditFile) != ""
@@ -164,9 +167,9 @@ func (c *Config) loadEnv() error {
 		c.EnableHTTPS = true
 	}
 
-	fmt.Printf("Config after ENV: [%+v]\r\n", c)
+	fmt.Printf("AppConf after ENV: [%+v]\r\n", c)
 
-	return nil
+	return c.copy(), nil
 }
 
 func parseFlag(env string, value flag.Value) error {
@@ -175,7 +178,7 @@ func parseFlag(env string, value flag.Value) error {
 		return nil
 	}
 
-	fmt.Printf("[DEBUG] Config: ENV [%s] VALUE [%+v]\r\n", env, value)
+	fmt.Printf("[DEBUG] AppConf: ENV [%s] VALUE [%+v]\r\n", env, value)
 
 	err := value.Set(envVar)
 	if err != nil {
@@ -185,7 +188,7 @@ func parseFlag(env string, value flag.Value) error {
 	return nil
 }
 
-func (c *Config) initFlags() {
+func (c *AppConf) initFlags() {
 	flag.StringVar(&c.AppName, FlagAppName, DefaultAppName, "application name")
 	flag.StringVar(&c.ProjectStage, FlagProjectStage, ProjectStageDevelopment, "project stage")
 	flag.StringVar(&c.LogLevel, FlagLogLevel, zap.InfoLevel.CapitalString(), "log level")
@@ -198,4 +201,51 @@ func (c *Config) initFlags() {
 	flag.StringVar(&c.AuditFile, FlagAuditFile, "", "audit file path")
 	flag.StringVar(&c.AuditURL, FlagAuditURL, "", "audit url")
 	flag.BoolVar(&c.EnableHTTPS, FlagEnableHTTPS, false, "enable https")
+	flag.StringVar(&c.configPath, FlagConfigFile, "", "config file path")
+}
+
+func (c *AppConf) copy() *AppConf {
+	return &AppConf{
+		AppName:           c.AppName,
+		ProjectStage:      c.ProjectStage,
+		LogLevel:          c.LogLevel,
+		BaseURL:           c.BaseURL,
+		HTTP:              c.HTTP.Copy(),
+		DBKind:            c.DBKind,
+		DBDsn:             c.DBDsn,
+		StoragePath:       c.StoragePath,
+		StorageUserPath:   c.StorageUserPath,
+		AuditIncomeLocal:  c.AuditIncomeLocal,
+		AuditIncomeRemote: c.AuditIncomeRemote,
+		EnableHTTPS:       c.EnableHTTPS,
+		configPath:        c.configPath,
+	}
+}
+
+func (c *AppConf) mergeWithPriority(conf *AppConf) {
+	if conf == nil {
+		return
+	}
+
+	c.AppName = conf.AppName
+	c.ProjectStage = conf.ProjectStage
+	c.LogLevel = conf.LogLevel
+	c.BaseURL = conf.BaseURL
+	c.HTTP = conf.HTTP.Copy()
+	c.DBKind = conf.DBKind
+	c.DBDsn = conf.DBDsn
+	c.StoragePath = conf.StoragePath
+	c.StorageUserPath = conf.StorageUserPath
+	c.AuditIncomeLocal = conf.AuditIncomeLocal
+	c.AuditIncomeRemote = conf.AuditIncomeRemote
+	c.EnableHTTPS = conf.EnableHTTPS
+	c.configPath = conf.configPath
+}
+
+func init() {
+	flag.CommandLine.Init("App cmd line", flag.PanicOnError)
+
+	intermediateConfig = defaultConfig()
+
+	intermediateConfig.initFlags()
 }

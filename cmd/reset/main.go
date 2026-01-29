@@ -1,9 +1,9 @@
 /*
 Алгоритм действий:
-* Проход по всей структуре проекта и сбор всех пакетов и файлов.
-* Анализ комментариев и выявление структур с комментарием // generate:reset.
-* Генерация методов Reset() для найденных структур.
-* Запись результатов в файлы reset.gen.go внутри соответствующих пакетов.
+  - Проход по всей структуре проекта и сбор всех пакетов и файлов.
+  - Анализ комментариев и выявление структур с комментарием // generate:reset.
+  - Генерация методов Reset() для найденных структур.
+  - Запись результатов в файлы reset.gen.go внутри соответствующих пакетов.
 */
 package main
 
@@ -32,18 +32,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	// Поднимаемся до корня проекта, предполагая, что cmd/reset находится внутри проекта
-	//for {
-	//	if _, err := os.Stat(filepath.Join(root, "go.mod")); err == nil {
-	//		break // Нашли корень проекта
-	//	}
-	//	parent := filepath.Dir(root)
-	//	if parent == root {
-	//		log.Fatal("Could not find go.mod file")
-	//	}
-	//	root = parent
-	//}
 
 	packages := make(map[string]map[string]*ast.File) // map[dir]map[filename]*ast.File
 
