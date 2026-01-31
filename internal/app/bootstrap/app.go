@@ -27,7 +27,7 @@ type App struct {
 	// контекст приложения с cancellation методом
 	ctx context.Context
 	// cancellation метод
-	cancelFunc context.CancelFunc
+	CancelFunc context.CancelFunc
 	// WG - рабочая группа приложения
 	WG sync.WaitGroup
 	// БД
@@ -67,7 +67,7 @@ func NewApp() *App {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &App{
 		ctx:        ctx,
-		cancelFunc: cancel,
+		CancelFunc: cancel,
 		Log:        logger.NewStartupZapLogger(),
 	}
 }
@@ -205,7 +205,7 @@ func (app *App) gracefulShutdown() {
 	select {
 	case <-sig:
 		{
-			app.cancelFunc()
+			app.CancelFunc()
 			break
 		}
 	case <-app.ctx.Done():

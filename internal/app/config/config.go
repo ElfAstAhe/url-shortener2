@@ -174,6 +174,8 @@ func (c *Config) loadConf() error {
 		return err
 	}
 
+	fmt.Printf("Config after CONF: [%+v]\r\n", c)
+
 	return nil
 }
 
