@@ -5,7 +5,7 @@
 *.so
 *.dylib
 
-# Test binary, built with `go test -c`
+# Test binary, built with `go exit -c`
 *.test
 
 # Output of the go coverage tool, specifically when used with LiteIDE
@@ -30,3 +30,4 @@ vendor/
 /cmd/shortener/income_audit.log
 /cmd/shortener/income-audit.log
 *.pprof
+/cmd/staticlint/staticlint

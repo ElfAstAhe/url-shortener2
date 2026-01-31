@@ -31,6 +31,7 @@ func (hc *HTTPConfig) GetListenerAddr() string {
 }
 
 // flag.Value ==================================
+
 func (hc *HTTPConfig) String() string {
 	return fmt.Sprintf("%s:%v", hc.Host, hc.Port)
 }

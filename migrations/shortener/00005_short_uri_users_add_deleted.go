@@ -1,4 +1,4 @@
-package migrations
+package shortener
 
 import (
 	"context"
