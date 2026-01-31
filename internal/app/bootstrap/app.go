@@ -200,7 +200,7 @@ func (app *App) gracefulShutdown() {
 	// channel
 	sig := make(chan os.Signal, 1)
 	// register channel signals
-	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	// awaiting signal
 	select {
 	case <-sig:
