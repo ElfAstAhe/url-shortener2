@@ -115,7 +115,7 @@ func (c *Config) loadCli() (err error) {
 	flag.Parse()
 	defer func() {
 		if r := recover(); r != nil {
-			err = errs.NewAppInvalidConfigError()
+			err = errs.NewAppGeneralInvalidConfigError("", r.(error))
 		}
 	}()
 
