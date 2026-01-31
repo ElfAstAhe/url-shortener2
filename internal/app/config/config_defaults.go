@@ -1,18 +1,32 @@
 package config
 
-const DefaultAppName = "URL shorter"
-const DefaultLogLevel = "INFO"
-const DefaultStage = ProjectStageDevelopment
-const DefaultBaseURL = "http://localhost:8080"
+const (
+	DefaultAppName  string = "URL shorter"
+	DefaultLogLevel string = "INFO"
+	DefaultStage           = ProjectStageDevelopment
+	DefaultBaseURL  string = "http://localhost:8080"
+)
 
-const DefaultHTTPSchema = "http"
-const DefaultHTTPHost string = "localhost"
-const DefaultHTTPPort int = 8080
+// server listener
+const (
+	DefaultHTTPHost string = "localhost"
+	DefaultHTTPPort int    = 8080
+)
 
-const DefaultDBKind = DBKindPostgres
-const DefaultDBDsn = ""
+// database
+const (
+	DefaultDBKind        = DBKindPostgres
+	DefaultDBDsn  string = ""
+)
 
-const DefaultStoragePath = "./shortener.txt"
-const DefaultStorageUserPath = "./shortener_user.txt"
+// storage
+const (
+	DefaultStoragePath     = "./shortener.txt"
+	DefaultStorageUserPath = "./shortener_user.txt"
+)
 
-const DefaultAuditIncomePath = "./audit_income.txt"
+// income audit
+
+const (
+	DefaultAuditIncomePath = "./audit_income.txt"
+)
