@@ -3,6 +3,7 @@ package bootstrap
 import (
 	"context"
 	"errors"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -18,8 +19,10 @@ import (
 	"github.com/ElfAstAhe/url-shortener2/internal/bll/service/audit"
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/facade"
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/handler"
+	appgrpc "github.com/ElfAstAhe/url-shortener2/internal/grpc"
 	_ "github.com/ElfAstAhe/url-shortener2/migrations/shortener"
 	"github.com/ElfAstAhe/url-shortener2/pkg/logger"
+	"google.golang.org/grpc"
 )
 
 // App - структура со всеми dependency приложения
@@ -56,6 +59,10 @@ type App struct {
 	router handler.AppRouter
 	// http сервер
 	httpServer *http.Server
+	// grpc сервер
+	grpcServer *grpc.Server
+	// grpc service (shortener)
+	grpcService *appgrpc.AppGRPCService
 }
 
 // NewApp - конструктор структуры App
@@ -130,6 +137,11 @@ func (app *App) Init() error {
 		return err
 	}
 
+	log.Info("init gRPC server")
+	if err := app.initGRPCServer(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -146,7 +158,7 @@ func (app *App) Run() error {
 	go app.gracefulShutdown()
 
 	log.Info("start server...")
-	if err := app.launchServer(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+	if err := app.launchHTTPServer(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Errorf("Error starting server with error [%v]", err)
 
 		return err
@@ -155,8 +167,8 @@ func (app *App) Run() error {
 	return nil
 }
 
-func (app *App) launchServer() error {
-	log := app.Log.GetLogger("bootstrap server launch")
+func (app *App) launchHTTPServer() error {
+	log := app.Log.GetLogger("bootstrap http server launch")
 	if app.conf.EnableHTTPS {
 		log.Info("enable https")
 		return app.httpServer.ListenAndServeTLS("localhost.crt", "localhost.key")
@@ -165,6 +177,16 @@ func (app *App) launchServer() error {
 	log.Info("enable http")
 
 	return app.httpServer.ListenAndServe()
+}
+
+func (app *App) launchGRPCServer() error {
+	log := app.Log.GetLogger("bootstrap gRPC server launch")
+	ls, err := net.Listen("tcp", ":50051")
+	if err != nil {
+		return err
+	}
+
+	return app.grpcServer.Serve(ls)
 }
 
 // Close - метод освобождения ресурсов приложения
@@ -195,8 +217,9 @@ func (app *App) Close() error {
 	return nil
 }
 
-// gracefulShutdown - внутренний метод "агрессивного" закрытия приложения (ctrl+c)
+// gracefulShutdown - внутренний метод "агрессивного" закрытия приложения (ctrl+c) + остальные сигналы OS на закрытие
 func (app *App) gracefulShutdown() {
+	defer app.WG.Done()
 	// channel
 	sig := make(chan os.Signal, 1)
 	// register channel signals
@@ -218,6 +241,4 @@ func (app *App) gracefulShutdown() {
 	if err := app.httpServer.Shutdown(context.Background()); err != nil {
 		app.Log.Errorf("error graceful shutdown http server with error [%v]", err)
 	}
-
-	app.WG.Done()
 }

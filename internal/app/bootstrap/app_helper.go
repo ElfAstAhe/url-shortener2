@@ -3,6 +3,7 @@ package bootstrap
 import (
 	"net/http"
 
+	pb "github.com/ElfAstAhe/url-shortener2/api/proto"
 	"github.com/ElfAstAhe/url-shortener2/internal/app/config"
 	"github.com/ElfAstAhe/url-shortener2/internal/app/config/db"
 	irepo "github.com/ElfAstAhe/url-shortener2/internal/bll/repository"
@@ -12,9 +13,11 @@ import (
 	"github.com/ElfAstAhe/url-shortener2/internal/dal/storage"
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/facade"
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/handler"
+	appgrpc "github.com/ElfAstAhe/url-shortener2/internal/grpc"
 	"github.com/ElfAstAhe/url-shortener2/internal/utils"
 	"github.com/ElfAstAhe/url-shortener2/pkg/logger"
 	migrations "github.com/ElfAstAhe/url-shortener2/pkg/migrations/goose"
+	"google.golang.org/grpc"
 )
 
 func (app *App) loadConfig() error {
@@ -125,6 +128,7 @@ func (app *App) initDependencies() error {
 	for _, observer := range observers {
 		app.auditEventService.Register(observer)
 	}
+	app.grpcService = appgrpc.NewAppGRPCService(app.shorterService, app.conf, app.Log)
 
 	// facades
 	app.toolFacade = facade.NewToolFacadeImpl(app.connCheckRepo, app.shorterService, app.conf.TrustedSubnetCIDR)
@@ -135,7 +139,7 @@ func (app *App) initDependencies() error {
 }
 
 func (app *App) initStartupServices() error {
-	// ..
+	// nothing
 
 	return nil
 }
@@ -166,6 +170,13 @@ func (app *App) initHTTPServer() error {
 		Addr:    app.conf.HTTP.GetListenerAddr(),
 		Handler: app.router.GetRouter(),
 	}
+
+	return nil
+}
+
+func (app *App) initGRPCServer() error {
+	app.grpcServer = grpc.NewServer()
+	pb.RegisterShortenerServiceServer(app.grpcServer, app.grpcService)
 
 	return nil
 }
