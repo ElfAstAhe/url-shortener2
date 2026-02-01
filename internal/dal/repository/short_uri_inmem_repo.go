@@ -202,6 +202,39 @@ func (ims *ShortURIInMemRepo) BatchDeleteByKeys(ctx context.Context, userID stri
 	return eg.Wait()
 }
 
+func (ims *ShortURIInMemRepo) Count(ctx context.Context) (int, error) {
+	return len(ims.cache.GetShortURICache()), nil
+}
+
+func (ims *ShortURIInMemRepo) UniqueCount(ctx context.Context) (int, int, error) {
+	eg, egCtx := errgroup.WithContext(ctx)
+	var urlCount, userCount int
+	eg.Go(func() error {
+		select {
+		case <-egCtx.Done():
+			return egCtx.Err()
+		default:
+			var err error
+			urlCount, err = ims.Count(egCtx)
+
+			return err
+		}
+	})
+	eg.Go(func() error {
+		select {
+		case <-egCtx.Done():
+			return egCtx.Err()
+		default:
+			var err error
+			userCount, err = ims.userRepo.UniqueCount(egCtx)
+
+			return err
+		}
+	})
+
+	return urlCount, userCount, eg.Wait()
+}
+
 func (ims *ShortURIInMemRepo) iter15Generator(ctx context.Context, ids []string) chan string {
 	inCh := make(chan string)
 

@@ -3,6 +3,8 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"maps"
+	"slices"
 
 	"github.com/google/uuid"
 
@@ -277,6 +279,37 @@ func (imsu *ShortURIUserInMemRepo) RemoveAllByShortURI(ctx context.Context, shor
 	}
 
 	return nil
+}
+
+func (imsu *ShortURIUserInMemRepo) Count(ctx context.Context) (int, error) {
+	return len(imsu.cache.GetShortURIUserCache()), nil
+}
+
+func (imsu *ShortURIUserInMemRepo) UniqueCount(ctx context.Context) (int, error) {
+	return countFunc(ctx, imsu, func(user *model.ShortURIUser) string {
+		return user.UserID
+	})
+}
+
+func countFunc[K comparable](ctx context.Context, imsu *ShortURIUserInMemRepo, selector func(user *model.ShortURIUser) K) (int, error) {
+	// Делаем копию и быстренько освободлаем ресурс (мьютекс)
+	// способ не очень по памяти, в качестве альтернативы батчами по n записей
+	imsu.cache.GetShortURIUserRWMutex().RLock()
+	cacheData := slices.Collect(maps.Values(imsu.cache.GetShortURIUserCache()))
+	dataCopy := make([]*model.ShortURIUser, len(cacheData))
+	copy(dataCopy, cacheData)
+	imsu.cache.GetShortURIUserRWMutex().RUnlock()
+
+	res := make(map[K]struct{})
+	for _, entity := range dataCopy {
+		if err := ctx.Err(); err != nil {
+			return 0, err
+		}
+
+		res[selector(entity)] = struct{}{}
+	}
+
+	return len(res), nil
 }
 
 func (imsu *ShortURIUserInMemRepo) CreateStmt(ctx context.Context, stmt *sql.Stmt, entity *model.ShortURIUser) (*model.ShortURIUser, error) {

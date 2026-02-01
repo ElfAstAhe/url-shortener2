@@ -47,6 +47,7 @@ type Config struct {
 	AuditIncomeRemote bool
 	EnableHTTPS       bool `json:"enable_https,omitempty"`
 	ConfigPath        string
+	TrustedSubnetCIDR string `json:"trusted_subnet,omitempty" env:"TRUSTED_SUBNET"`
 }
 
 func NewConfig() *Config {
@@ -222,6 +223,7 @@ func (c *Config) initFlags() {
 	flag.BoolVar(&c.EnableHTTPS, FlagEnableHTTPS, false, "enable https")
 	flag.StringVar(&c.ConfigPath, FlagConfigPath, "", "config file path")
 	flag.StringVar(&c.ConfigPath, FlagConfigBigPath, "", "config file path")
+	flag.StringVar(&c.TrustedSubnetCIDR, FlagTrustedSubnetCIDR, "", "trusted subnet CIDR (example: 192.168.100.0/24)")
 
 	flag.CommandLine.Init(flag.CommandLine.Name(), flag.PanicOnError)
 }

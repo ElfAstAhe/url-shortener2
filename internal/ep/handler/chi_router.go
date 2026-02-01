@@ -113,6 +113,14 @@ func (cr *AppChiRouter) setupRoutes() {
 					r.Delete("/", cr.deleteAPIUserUrls)
 				})
 			})
+
+			// internal sub-router
+			r.Route("/internal", func(r chi.Router) {
+				// stats sub-router
+				r.Route("/stats", func(r chi.Router) {
+					r.Get("/", cr.getAPIInternalStats)
+				})
+			})
 		})
 	})
 }

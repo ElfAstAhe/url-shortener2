@@ -34,6 +34,8 @@ const (
 	removeAllShortURIUserByUniqueSQL   string = `delete from short_uri_users where user_id = $1 and short_uri_id = any($2)`
 	removeAllShortURIUserByUserSQL     string = `delete from short_uri_users where user_id = $1`
 	removeAllShortURIUserByShortURISQL string = `delete from short_uri_users where short_uri_id = $1`
+	getShortURIUserCountSQL            string = `select count(id) from short_uri_users`
+	getShortURIUserUniqueCountSQL      string = `select count(1) as ucnt from (select distinct user_id from short_uri_users)`
 )
 
 func NewShortURIUserPgRepo(appDB db.DB) (*ShortURIUserPgRepo, error) {
@@ -190,6 +192,32 @@ func (pgsu *ShortURIUserPgRepo) Change(ctx context.Context, entity *model.ShortU
 	defer utils.CloseOnly(stmt)
 
 	return pgsu.ChangeStmt(ctx, stmt, entity)
+}
+
+func (pgsu *ShortURIUserPgRepo) Count(ctx context.Context) (int, error) {
+	row := pgsu.db.GetDB().QueryRowContext(ctx, getShortURIUserCountSQL)
+	var count int
+	err := row.Scan(&count)
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		return 0, nil
+	} else if err != nil {
+		return 0, err
+	}
+
+	return count, nil
+}
+
+func (pgsu *ShortURIUserPgRepo) UniqueCount(ctx context.Context) (int, error) {
+	row := pgsu.db.GetDB().QueryRowContext(ctx, getShortURIUserUniqueCountSQL)
+	var count int
+	err := row.Scan(&count)
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		return 0, nil
+	} else if err != nil {
+		return 0, err
+	}
+
+	return count, nil
 }
 
 func (pgsu *ShortURIUserPgRepo) ChangeStmt(ctx context.Context, stmt *sql.Stmt, entity *model.ShortURIUser) (*model.ShortURIUser, error) {

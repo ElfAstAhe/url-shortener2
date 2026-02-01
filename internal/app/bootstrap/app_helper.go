@@ -127,7 +127,7 @@ func (app *App) initDependencies() error {
 	}
 
 	// facades
-	app.toolFacade = facade.NewToolFacadeImpl(app.connCheckRepo)
+	app.toolFacade = facade.NewToolFacadeImpl(app.connCheckRepo, app.shorterService, app.conf.TrustedSubnetCIDR)
 	app.shortenFacade = facade.NewShortenFacadeImpl(app.shorterService, app.conf.BaseURL)
 	app.userFacade = facade.NewUserFacadeImpl(app.shorterService, app.Log)
 

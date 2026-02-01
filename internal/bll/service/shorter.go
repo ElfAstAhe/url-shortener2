@@ -23,4 +23,11 @@ type Shorter interface {
 
 	// BatchDelete remove short uris by user id
 	BatchDelete(ctx context.Context, userID string, data model.UserBatchDeletes) error
+
+	// InternalStats show internal data statistic info
+	// returns
+	//  total url count
+	//  total unique user count
+	//  error
+	InternalStats(ctx context.Context) (int, int, error)
 }
