@@ -22,6 +22,7 @@ import (
 	appgrpc "github.com/ElfAstAhe/url-shortener2/internal/grpc"
 	_ "github.com/ElfAstAhe/url-shortener2/migrations/shortener"
 	"github.com/ElfAstAhe/url-shortener2/pkg/logger"
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 )
 
@@ -157,14 +158,30 @@ func (app *App) Run() error {
 	app.WG.Add(1)
 	go app.gracefulShutdown()
 
-	log.Info("start server...")
-	if err := app.launchHTTPServer(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		log.Errorf("Error starting server with error [%v]", err)
+	var eg errgroup.Group
+	log.Info("start servers...")
+	// http
+	eg.Go(func() error {
+		if err := app.launchHTTPServer(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Errorf("Error starting http server with error [%v]", err)
 
-		return err
-	}
+			return err
+		}
 
-	return nil
+		return nil
+	})
+	// gRPC
+	eg.Go(func() error {
+		if err := app.launchGRPCServer(); err != nil && !errors.Is(err, grpc.ErrServerStopped) {
+			log.Errorf("Error starting gRPC server with error [%v]", err)
+
+			return err
+		}
+
+		return nil
+	})
+
+	return eg.Wait()
 }
 
 func (app *App) launchHTTPServer() error {
@@ -180,7 +197,6 @@ func (app *App) launchHTTPServer() error {
 }
 
 func (app *App) launchGRPCServer() error {
-	log := app.Log.GetLogger("bootstrap gRPC server launch")
 	ls, err := net.Listen("tcp", ":50051")
 	if err != nil {
 		return err
@@ -238,7 +254,12 @@ func (app *App) gracefulShutdown() {
 		}
 	}
 
+	// stop http
+	app.Log.Info("graceful shutdown http server")
 	if err := app.httpServer.Shutdown(context.Background()); err != nil {
 		app.Log.Errorf("error graceful shutdown http server with error [%v]", err)
 	}
+	// stop gRPC
+	app.Log.Info("graceful shutdown gRPC server")
+	app.grpcServer.GracefulStop()
 }
