@@ -128,12 +128,18 @@ func (app *App) initDependencies() error {
 	for _, observer := range observers {
 		app.auditEventService.Register(observer)
 	}
-	app.grpcService = appgrpc.NewAppGRPCService(app.shorterService, app.conf, app.Log)
 
 	// facades
 	app.toolFacade = facade.NewToolFacadeImpl(app.connCheckRepo, app.shorterService, app.conf.TrustedSubnetCIDR)
 	app.shortenFacade = facade.NewShortenFacadeImpl(app.shorterService, app.conf.BaseURL)
 	app.userFacade = facade.NewUserFacadeImpl(app.shorterService, app.Log)
+
+	// grpc
+	// facade
+	app.grpcShortenFacade = appgrpc.NewShortenGRPCFacade(app.shorterService, app.Log)
+
+	// service
+	app.grpcService = appgrpc.NewAppGRPCService(app.grpcShortenFacade, app.conf, app.Log)
 
 	return nil
 }
@@ -175,7 +181,9 @@ func (app *App) initHTTPServer() error {
 }
 
 func (app *App) initGRPCServer() error {
-	app.grpcServer = grpc.NewServer()
+	app.grpcServer = grpc.NewServer(
+		grpc.UnaryInterceptor(appgrpc.NewAuthRetrieveInterceptor(app.Log).UnaryInterceptor),
+	)
 	pb.RegisterShortenerServiceServer(app.grpcServer, app.grpcService)
 
 	return nil

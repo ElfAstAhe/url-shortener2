@@ -7,8 +7,11 @@ option go_package = "shortener/grpc/shortener";
 import "google/protobuf/empty.proto";
 
 service ShortenerService {
+  // POST /
   rpc ShortenURL (URLShortenRequest) returns (URLShortenResponse);
+  // GET /{key}
   rpc ExpandURL (URLExpandRequest) returns (URLExpandResponse);
+  // GET /api/user/urls
   rpc ListUserURLs (google.protobuf.Empty) returns (UserURLsResponse);
 }
 

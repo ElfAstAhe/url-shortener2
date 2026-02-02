@@ -60,10 +60,12 @@ type App struct {
 	router handler.AppRouter
 	// http сервер
 	httpServer *http.Server
+	// grpc facade
+	grpcShortenFacade *appgrpc.ShortenGRPCFacade
+	// grpc service (shortener)
+	grpcService *appgrpc.ShortenGRPCService
 	// grpc сервер
 	grpcServer *grpc.Server
-	// grpc service (shortener)
-	grpcService *appgrpc.AppGRPCService
 }
 
 // NewApp - конструктор структуры App
