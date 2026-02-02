@@ -33,13 +33,13 @@ func main() {
 		logger.Errorf("app initialization failed [%v]", err)
 		defer app.Close()
 
-		//		os.Exit(1)
 		panic(errors.New("app initialization failed"))
 	}
 
 	// app run
 	logger.Info("app run")
 	if err := app.Run(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		app.CancelFunc()
 		logger.Errorf("app run error [%v]", err)
 	}
 
@@ -50,12 +50,10 @@ func main() {
 	if err := app.Close(); err != nil {
 		logger.Errorf("app close error [%v]", err)
 
-		//		os.Exit(1)
 		panic(errors.New("app close failed"))
 	}
 
 	logger.Info("app shutdown")
-	//	os.Exit(0)
 }
 
 func printOrNA(template, val string) {

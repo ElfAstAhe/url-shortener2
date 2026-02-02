@@ -31,3 +31,5 @@ vendor/
 /cmd/shortener/income-audit.log
 *.pprof
 /cmd/staticlint/staticlint
+/cmd/shortener/shortener_conf.json
+/cmd/shortener/shortener2.txt

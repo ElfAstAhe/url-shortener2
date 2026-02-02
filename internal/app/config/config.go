@@ -1,5 +1,14 @@
-// Package config
+// Package config encapsulate application configuration code
 /*
+  Iteration 25
+
+  Configuration params priority :
+
+  1 - config file
+  2 - ENV vars
+  1 - CLI params
+  4 - Default values
+
   Iteration 5
 
   Configuration params priority :
@@ -11,11 +20,13 @@
 package config
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
 	"strings"
 
+	errs "github.com/ElfAstAhe/url-shortener2/pkg/error"
 	"github.com/caarlos0/env/v6"
 	"go.uber.org/zap"
 )
@@ -25,42 +36,18 @@ type Config struct {
 	ProjectStage      string      `json:"project_stage,omitempty"`
 	LogLevel          string      `json:"log_level,omitempty"`
 	BaseURL           string      `json:"base_url,omitempty" env:"BASE_URL"`
-	HTTP              *HTTPConfig `json:"http,omitempty"`
-	DBKind            string      `json:"db_kind,omitempty"`
-	DBDsn             string      `json:"db_dsn,omitempty" env:"DATABASE_DSN"`
-	StoragePath       string      `json:"storage_path,omitempty" env:"FILE_STORAGE_PATH"`
-	StorageUserPath   string      `json:"storage_user_path,omitempty" env:"FILE_STORAGE_USER_PATH"`
-	AuditFile         string      `json:"audit_file,omitempty" env:"AUDIT_FILE"`
+	HTTP              *HTTPConfig `json:"server_address,omitempty"`
+	DBKind            string
+	DBDsn             string `json:"database_dsn,omitempty" env:"DATABASE_DSN"`
+	StoragePath       string `json:"file_storage_path,omitempty" env:"FILE_STORAGE_PATH"`
+	StorageUserPath   string `json:"storage_user_path,omitempty" env:"FILE_STORAGE_USER_PATH"`
+	AuditFile         string `json:"audit_file,omitempty" env:"AUDIT_FILE"`
 	AuditIncomeLocal  bool
 	AuditURL          string `json:"audit_url,omitempty" env:"AUDIT_URL"`
 	AuditIncomeRemote bool
+	EnableHTTPS       bool `json:"enable_https,omitempty"`
+	ConfigPath        string
 }
-
-// Flags
-const (
-	FlagAppName         string = "p"
-	FlagProjectStage    string = "s"
-	FlagLogLevel        string = "l"
-	FlagBaseURL         string = "b"
-	FlagDBKind          string = "k"
-	FlagHTTPInterface   string = "a"
-	FlagDBInterface     string = "d"
-	FlagStoragePath     string = "f"
-	FlagStorageUserPath string = "fu"
-	FlagAuditFile       string = "audit-file"
-	FlagAuditURL        string = "audit-url"
-)
-
-// Environment variables
-const (
-	EnvBaseURL             string = "BASE_URL"
-	EnvHTTPInterface       string = "SERVER_ADDR"
-	EnvStorageFilename     string = "FILE_STORAGE_PATH"
-	EnvStorageUserFilename string = "FILE_STORAGE_USER_PATH"
-	EnvDatabaseDSN         string = "DATABASE_DSN"
-	EnvAuditFile           string = "AUDIT_FILE"
-	EnvAuditURL            string = "AUDIT_URL"
-)
 
 func NewConfig() *Config {
 	var cfg = defaultConfig()
@@ -82,6 +69,7 @@ func newConfig(appName string, projectStage string, logLevel string, baseURL str
 		StoragePath:       storagePath,
 		AuditIncomeLocal:  false,
 		AuditIncomeRemote: false,
+		EnableHTTPS:       false,
 	}
 }
 
@@ -102,6 +90,14 @@ func (c *Config) LoadConfig() error {
 		return err
 	}
 
+	if strings.TrimSpace(c.ConfigPath) != "" {
+		fmt.Println("Parse conf params")
+		err = c.loadConf()
+		if err != nil {
+			return err
+		}
+	}
+
 	if strings.TrimSpace(c.DBDsn) == "" {
 		c.DBKind = DBKindInMemory
 	}
@@ -115,11 +111,23 @@ func (c *Config) LoadConfig() error {
 	return nil
 }
 
-func (c *Config) loadCli() error {
+func (c *Config) loadCli() (err error) {
 	flag.Parse()
+	defer func() {
+		if r := recover(); r != nil {
+			recoveryErr, ok := r.(error)
+			if ok {
+				err = errs.NewAppGeneralInvalidConfigError("", recoveryErr)
+			}
+		}
+	}()
 
 	c.AuditIncomeLocal = strings.TrimSpace(c.AuditFile) != ""
 	c.AuditIncomeRemote = strings.TrimSpace(c.AuditURL) != ""
+
+	if c.cliFlagExists(FlagEnableHTTPS) {
+		c.EnableHTTPS = true
+	}
 
 	fmt.Printf("Config after CLI: [%+v]\r\n", c)
 
@@ -140,9 +148,47 @@ func (c *Config) loadEnv() error {
 	c.AuditIncomeLocal = strings.TrimSpace(c.AuditFile) != ""
 	c.AuditIncomeRemote = strings.TrimSpace(c.AuditURL) != ""
 
+	if _, ok := os.LookupEnv(EnvHTTPInterface); ok {
+		c.EnableHTTPS = true
+	}
+
+	if _, ok := os.LookupEnv(EnvConfig); ok {
+		c.ConfigPath = os.Getenv(EnvConfig)
+	}
+
 	fmt.Printf("Config after ENV: [%+v]\r\n", c)
 
 	return nil
+}
+
+func (c *Config) loadConf() error {
+	cf, err := os.OpenFile(c.ConfigPath, os.O_RDONLY, 0666)
+	if err != nil {
+		return err
+	}
+	defer cf.Close()
+
+	dec := json.NewDecoder(cf)
+	err = dec.Decode(c)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Config after CONF: [%+v]\r\n", c)
+
+	return nil
+}
+
+func (c *Config) cliFlagExists(name string) bool {
+	res := false
+
+	flag.Visit(func(f *flag.Flag) {
+		if f.Name == name {
+			res = true
+		}
+	})
+
+	return res
 }
 
 func parseFlag(env string, value flag.Value) error {
@@ -173,4 +219,9 @@ func (c *Config) initFlags() {
 	flag.StringVar(&c.StorageUserPath, FlagStorageUserPath, DefaultStorageUserPath, "storage user path")
 	flag.StringVar(&c.AuditFile, FlagAuditFile, "", "audit file path")
 	flag.StringVar(&c.AuditURL, FlagAuditURL, "", "audit url")
+	flag.BoolVar(&c.EnableHTTPS, FlagEnableHTTPS, false, "enable https")
+	flag.StringVar(&c.ConfigPath, FlagConfigPath, "", "config file path")
+	flag.StringVar(&c.ConfigPath, FlagConfigBigPath, "", "config file path")
+
+	flag.CommandLine.Init(flag.CommandLine.Name(), flag.PanicOnError)
 }

@@ -27,7 +27,7 @@ type App struct {
 	// контекст приложения с cancellation методом
 	ctx context.Context
 	// cancellation метод
-	cancelFunc context.CancelFunc
+	CancelFunc context.CancelFunc
 	// WG - рабочая группа приложения
 	WG sync.WaitGroup
 	// БД
@@ -67,7 +67,7 @@ func NewApp() *App {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &App{
 		ctx:        ctx,
-		cancelFunc: cancel,
+		CancelFunc: cancel,
 		Log:        logger.NewStartupZapLogger(),
 	}
 }
@@ -146,13 +146,25 @@ func (app *App) Run() error {
 	go app.gracefulShutdown()
 
 	log.Info("start server...")
-	if err := app.httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+	if err := app.launchServer(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Errorf("Error starting server with error [%v]", err)
 
 		return err
 	}
 
 	return nil
+}
+
+func (app *App) launchServer() error {
+	log := app.Log.GetLogger("bootstrap server launch")
+	if app.conf.EnableHTTPS {
+		log.Info("enable https")
+		return app.httpServer.ListenAndServeTLS("localhost.crt", "localhost.key")
+	}
+
+	log.Info("enable http")
+
+	return app.httpServer.ListenAndServe()
 }
 
 // Close - метод освобождения ресурсов приложения
@@ -188,12 +200,12 @@ func (app *App) gracefulShutdown() {
 	// channel
 	sig := make(chan os.Signal, 1)
 	// register channel signals
-	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	// awaiting signal
 	select {
 	case <-sig:
 		{
-			app.cancelFunc()
+			app.CancelFunc()
 			break
 		}
 	case <-app.ctx.Done():
