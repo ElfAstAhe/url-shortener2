@@ -21,3 +21,7 @@ func UserURLsToURLsData(shorts model.UserShorts) []*shortener.URLData {
 
 	return res
 }
+
+func KeyToURL(baseURL, key string) string {
+
+}

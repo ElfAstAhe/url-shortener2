@@ -136,7 +136,7 @@ func (app *App) initDependencies() error {
 
 	// grpc
 	// facade
-	app.grpcShortenFacade = appgrpc.NewShortenGRPCFacade(app.shorterService, app.Log)
+	app.grpcShortenFacade = appgrpc.NewShortenGRPCFacade(app.shorterService, app.conf.BaseURL, app.Log)
 
 	// service
 	app.grpcService = appgrpc.NewAppGRPCService(app.grpcShortenFacade, app.conf, app.Log)
@@ -182,7 +182,11 @@ func (app *App) initHTTPServer() error {
 
 func (app *App) initGRPCServer() error {
 	app.grpcServer = grpc.NewServer(
+		grpc.UnaryInterceptor(appgrpc.NewAuthIter14Interceptor([]string{
+			"ShortenURL",
+		}, app.Log).UnaryInterceptor),
 		grpc.UnaryInterceptor(appgrpc.NewAuthRetrieveInterceptor(app.Log).UnaryInterceptor),
+		grpc.UnaryInterceptor(appgrpc.NewAuthTrailerInterceptor(app.Log).UnaryInterceptor),
 	)
 	pb.RegisterShortenerServiceServer(app.grpcServer, app.grpcService)
 

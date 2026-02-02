@@ -7,6 +7,7 @@ import (
 
 	pb "github.com/ElfAstAhe/url-shortener2/api/proto"
 	"github.com/ElfAstAhe/url-shortener2/internal/app/config"
+	apperrs "github.com/ElfAstAhe/url-shortener2/internal/error"
 	errs "github.com/ElfAstAhe/url-shortener2/pkg/error"
 	"github.com/ElfAstAhe/url-shortener2/pkg/logger"
 	"google.golang.org/grpc/codes"
@@ -34,9 +35,23 @@ func NewAppGRPCService(
 }
 
 func (as *ShortenGRPCService) ShortenURL(ctx context.Context, req *pb.URLShortenRequest) (*pb.URLShortenResponse, error) {
-	// ToDo: implement
+	resp, err := as.facade.CreateURL(ctx, req)
+	if err != nil && !errors.As(err, &apperrs.BllConflictErr) {
+		// unauthorized
+		if errors.As(err, &errs.AuthUnauthorizedErr) || errors.As(err, &errs.AuthInfoInvalidErr) {
+			return nil, status.Error(codes.Unauthenticated, fmt.Sprintf("unauthorized with error [%v]", err))
+		}
 
-	return nil, status.Error(codes.Unimplemented, "method ShortenURL not implemented")
+		// internal
+		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to create URLs with error [%v]", err))
+	}
+
+	// conflict
+	if err != nil && !errors.As(err, &apperrs.BllConflictErr) {
+		err = status.Error(codes.AlreadyExists, fmt.Sprintf("URL already exists, error [%v]", err))
+	}
+
+	return resp, err
 }
 
 func (as *ShortenGRPCService) ExpandURL(ctx context.Context, req *pb.URLExpandRequest) (*pb.URLExpandResponse, error) {

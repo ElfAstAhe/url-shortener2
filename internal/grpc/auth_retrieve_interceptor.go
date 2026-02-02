@@ -20,12 +20,14 @@ func NewAuthRetrieveInterceptor(log logger.Logger) *AuthRetrieveInterceptor {
 }
 
 func (ari *AuthRetrieveInterceptor) UnaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-	ari.log.Info("UnaryInterceptor start")
-	defer ari.log.Info("UnaryInterceptor finish")
+	ari.log.Info("AuthRetrieveInterceptor start")
+	defer ari.log.Info("AuthRetrieveInterceptor finish")
+
+	ari.log.Infof("AuthRetrieveInterceptor full method [%s]", info.FullMethod)
 
 	ctxUserInfo := ctx
 	if md, ok := metadata.FromIncomingContext(ctx); ok {
-		values := md.Get("authorization")
+		values := md.Get(MetaDataAuthorization)
 		var userInfo *auth.UserInfo
 		var err error
 		if len(values) > 0 {

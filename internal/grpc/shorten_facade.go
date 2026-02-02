@@ -2,21 +2,25 @@ package grpc
 
 import (
 	"context"
+	"errors"
 
 	pb "github.com/ElfAstAhe/url-shortener2/api/proto"
 	"github.com/ElfAstAhe/url-shortener2/internal/bll/service"
 	"github.com/ElfAstAhe/url-shortener2/internal/bll/service/auth"
+	apperrs "github.com/ElfAstAhe/url-shortener2/internal/error"
 	"github.com/ElfAstAhe/url-shortener2/pkg/logger"
 )
 
 type ShortenGRPCFacade struct {
 	service service.Shorter
 	log     logger.Logger
+	baseURL string
 }
 
-func NewShortenGRPCFacade(service service.Shorter, log logger.Logger) *ShortenGRPCFacade {
+func NewShortenGRPCFacade(service service.Shorter, baseURL string, log logger.Logger) *ShortenGRPCFacade {
 	return &ShortenGRPCFacade{
 		service: service,
+		baseURL: baseURL,
 		log:     log.GetLogger("shorten-grpc-facade"),
 	}
 }
@@ -35,4 +39,26 @@ func (sf *ShortenGRPCFacade) ListAllUserURLs(ctx context.Context) (*pb.UserURLsR
 	return pb.UserURLsResponse_builder{
 		Url: UserURLsToURLsData(modelData),
 	}.Build(), nil
+}
+
+func (sf *ShortenGRPCFacade) CreateURL(ctx context.Context, req *pb.URLShortenRequest) (*pb.URLShortenResponse, error) {
+	userInfo, err := auth.UserInfoFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	modelData, err := sf.service.Store(ctx, userInfo.UserID, req.GetUrl())
+	if err != nil && !errors.As(err, &apperrs.BllConflictErr) {
+		return nil, err
+	}
+
+	return pb.URLShortenResponse_builder{
+		Result: KeyToURL(sf.baseURL, modelData),
+	}.Build(), err
+}
+
+func (sf *ShortenGRPCFacade) GetURL(ctx context.Context, req *pb.URLExpandRequest) (*pb.URLExpandResponse, error) {
+	// ToDo: implement
+
+	return nil, nil
 }
