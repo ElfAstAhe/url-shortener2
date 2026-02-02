@@ -55,9 +55,23 @@ func (as *ShortenGRPCService) ShortenURL(ctx context.Context, req *pb.URLShorten
 }
 
 func (as *ShortenGRPCService) ExpandURL(ctx context.Context, req *pb.URLExpandRequest) (*pb.URLExpandResponse, error) {
-	// ToDo: implement
+	resp, err := as.facade.GetURL(ctx, req)
+	if err != nil {
+		// gone
+		if errors.As(err, &apperrs.DalSoftRemovedErr) {
+			return nil, status.Error(codes.NotFound, fmt.Sprintf("data gone, error [%v]", err))
+		}
 
-	return nil, status.Error(codes.Unimplemented, "method ExpandURL not implemented")
+		// internal
+		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to get URLs with error [%v]", err))
+	}
+
+	// not found
+	if resp == nil {
+		return nil, status.Error(codes.NotFound, "not found")
+	}
+
+	return resp, nil
 }
 
 func (as *ShortenGRPCService) ListUserURLs(ctx context.Context, req *emptypb.Empty) (*pb.UserURLsResponse, error) {

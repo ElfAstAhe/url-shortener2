@@ -1,19 +1,20 @@
 package grpc
 
 import (
-	shortener "github.com/ElfAstAhe/url-shortener2/api/proto"
+	pb "github.com/ElfAstAhe/url-shortener2/api/proto"
 	"github.com/ElfAstAhe/url-shortener2/internal/bll/model"
+	"github.com/ElfAstAhe/url-shortener2/internal/utils"
 )
 
-func UserURLToURLData(shortURL, originalURL string) *shortener.URLData {
-	return shortener.URLData_builder{
+func UserURLToURLData(shortURL, originalURL string) *pb.URLData {
+	return pb.URLData_builder{
 		OriginalUrl: originalURL,
 		ShortUrl:    shortURL,
 	}.Build()
 }
 
-func UserURLsToURLsData(shorts model.UserShorts) []*shortener.URLData {
-	res := make([]*shortener.URLData, 0, len(shorts))
+func UserURLsToURLsData(shorts model.UserShorts) []*pb.URLData {
+	res := make([]*pb.URLData, 0, len(shorts))
 
 	for original, short := range shorts {
 		res = append(res, UserURLToURLData(short, original))
@@ -23,5 +24,5 @@ func UserURLsToURLsData(shorts model.UserShorts) []*shortener.URLData {
 }
 
 func KeyToURL(baseURL, key string) string {
-
+	return utils.BuildNewURI(baseURL, key)
 }
