@@ -14,7 +14,9 @@ type AuthTrailerInterceptor struct {
 }
 
 func NewAuthTrailerInterceptor(log logger.Logger) *AuthTrailerInterceptor {
-	return &AuthTrailerInterceptor{log: log.GetLogger("auth-trailer-interceptor")}
+	return &AuthTrailerInterceptor{
+		log: log.GetLogger("gRPC auth-trailer"),
+	}
 }
 
 func (ati *AuthTrailerInterceptor) UnaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {

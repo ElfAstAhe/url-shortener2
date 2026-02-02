@@ -114,7 +114,7 @@ func (pgs *ShortURIPgRepo) GetByKeyUser(ctx context.Context, userID string, key 
 	}
 	var deleted = false
 	err := row.Scan(&result.ID, &result.OriginalURL, &result.Key, &deleted)
-	if row.Err() != nil && !errors.Is(row.Err(), sql.ErrNoRows) {
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	} else if err != nil {
 		return nil, err

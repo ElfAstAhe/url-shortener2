@@ -58,16 +58,16 @@ func (sf *ShortenGRPCFacade) CreateURL(ctx context.Context, req *pb.URLShortenRe
 }
 
 func (sf *ShortenGRPCFacade) GetURL(ctx context.Context, req *pb.URLExpandRequest) (*pb.URLExpandResponse, error) {
-	key, err := sf.service.GetURL(ctx, req.GetId())
+	original, err := sf.service.GetURL(ctx, req.GetId())
 	if err != nil {
 		return nil, err
 	}
-	if key == "" {
+	if original == "" {
 		return nil, nil
 	}
 
 	resp := pb.URLExpandResponse_builder{
-		Result: KeyToURL(sf.baseURL, key),
+		Result: original,
 	}.Build()
 
 	userInfo, err := auth.UserInfoFromContext(ctx)
@@ -76,7 +76,7 @@ func (sf *ShortenGRPCFacade) GetURL(ctx context.Context, req *pb.URLExpandReques
 	}
 
 	// get user data
-	_, errUser := sf.service.GetURLUser(ctx, userInfo.UserID, key)
+	_, errUser := sf.service.GetURLUser(ctx, userInfo.UserID, req.GetId())
 	if errUser != nil && !errors.As(errUser, &apperrs.DalSoftRemovedErr) {
 		return nil, errUser
 	}

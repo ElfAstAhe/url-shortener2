@@ -182,12 +182,13 @@ func (app *App) initHTTPServer() error {
 
 func (app *App) initGRPCServer() error {
 	app.grpcServer = grpc.NewServer(
-		grpc.UnaryInterceptor(appgrpc.NewAuthIter14Interceptor([]string{
-			"ShortenURL",
-		}, app.Log).UnaryInterceptor),
-		grpc.UnaryInterceptor(appgrpc.NewAuthRetrieveInterceptor(app.Log).UnaryInterceptor),
-		grpc.UnaryInterceptor(appgrpc.NewAuthTrailerInterceptor(app.Log).UnaryInterceptor),
-	)
+		grpc.ChainUnaryInterceptor(
+			appgrpc.NewAuthIter14Interceptor([]string{
+				"/urls.shortener.ShortenerService/ShortenURL",
+			}, app.Log).UnaryInterceptor,
+			appgrpc.NewAuthRetrieveInterceptor(app.Log).UnaryInterceptor,
+			appgrpc.NewAuthTrailerInterceptor(app.Log).UnaryInterceptor,
+		))
 	pb.RegisterShortenerServiceServer(app.grpcServer, app.grpcService)
 
 	return nil
