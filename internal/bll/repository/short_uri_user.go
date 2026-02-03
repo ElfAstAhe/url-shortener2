@@ -35,6 +35,9 @@ type ShortURIUserRepository interface {
 	// RemoveAllByShortURI is physical all records removal by short uri
 	RemoveAllByShortURI(ctx context.Context, shortURIID string) error
 
+	Count(ctx context.Context) (int, error)
+	UniqueCount(ctx context.Context) (int, error)
+
 	CreateStmt(ctx context.Context, stmt *sql.Stmt, entity *model.ShortURIUser) (*model.ShortURIUser, error)
 	ChangeStmt(ctx context.Context, stmt *sql.Stmt, entity *model.ShortURIUser) (*model.ShortURIUser, error)
 	DeleteStmt(ctx context.Context, stmt *sql.Stmt, ID string) error

@@ -3,6 +3,7 @@ package bootstrap
 import (
 	"net/http"
 
+	pb "github.com/ElfAstAhe/url-shortener2/api/proto"
 	"github.com/ElfAstAhe/url-shortener2/internal/app/config"
 	"github.com/ElfAstAhe/url-shortener2/internal/app/config/db"
 	irepo "github.com/ElfAstAhe/url-shortener2/internal/bll/repository"
@@ -12,9 +13,11 @@ import (
 	"github.com/ElfAstAhe/url-shortener2/internal/dal/storage"
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/facade"
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/handler"
+	appgrpc "github.com/ElfAstAhe/url-shortener2/internal/grpc"
 	"github.com/ElfAstAhe/url-shortener2/internal/utils"
 	"github.com/ElfAstAhe/url-shortener2/pkg/logger"
 	migrations "github.com/ElfAstAhe/url-shortener2/pkg/migrations/goose"
+	"google.golang.org/grpc"
 )
 
 func (app *App) loadConfig() error {
@@ -127,15 +130,22 @@ func (app *App) initDependencies() error {
 	}
 
 	// facades
-	app.toolFacade = facade.NewToolFacadeImpl(app.connCheckRepo)
+	app.toolFacade = facade.NewToolFacadeImpl(app.connCheckRepo, app.shorterService, app.conf.TrustedSubnetCIDR)
 	app.shortenFacade = facade.NewShortenFacadeImpl(app.shorterService, app.conf.BaseURL)
 	app.userFacade = facade.NewUserFacadeImpl(app.shorterService, app.Log)
+
+	// grpc
+	// facade
+	app.grpcShortenFacade = appgrpc.NewShortenGRPCFacade(app.shorterService, app.conf.BaseURL, app.Log)
+
+	// service
+	app.grpcService = appgrpc.NewAppGRPCService(app.grpcShortenFacade, app.conf, app.Log)
 
 	return nil
 }
 
 func (app *App) initStartupServices() error {
-	// ..
+	// nothing
 
 	return nil
 }
@@ -166,6 +176,20 @@ func (app *App) initHTTPServer() error {
 		Addr:    app.conf.HTTP.GetListenerAddr(),
 		Handler: app.router.GetRouter(),
 	}
+
+	return nil
+}
+
+func (app *App) initGRPCServer() error {
+	app.grpcServer = grpc.NewServer(
+		grpc.ChainUnaryInterceptor(
+			appgrpc.NewAuthIter14Interceptor([]string{
+				"/urls.shortener.ShortenerService/ShortenURL",
+			}, app.Log).UnaryInterceptor,
+			appgrpc.NewAuthRetrieveInterceptor(app.Log).UnaryInterceptor,
+			appgrpc.NewAuthTrailerInterceptor(app.Log).UnaryInterceptor,
+		))
+	pb.RegisterShortenerServiceServer(app.grpcServer, app.grpcService)
 
 	return nil
 }

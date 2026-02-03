@@ -1,6 +1,8 @@
 package repository
 
-import "context"
+import (
+	"context"
+)
 
 type DBConnCheckImMemRepo struct {
 }

@@ -16,4 +16,6 @@ type ShortURIRepository interface {
 	BatchCreate(ctx context.Context, userID string, batch map[string]*model.ShortURI) (map[string]*model.ShortURI, error)
 	Delete(ctx context.Context, ID string, userID string) error
 	BatchDeleteByKeys(ctx context.Context, userID string, keys []string) error
+	Count(ctx context.Context) (int, error)
+	UniqueCount(ctx context.Context) (int, int, error)
 }

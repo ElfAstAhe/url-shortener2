@@ -124,6 +124,10 @@ func (s *ShorterImpl) BatchDelete(ctx context.Context, userID string, data model
 	return s.shortURIRepo.BatchDeleteByKeys(ctx, userID, data)
 }
 
+func (s *ShorterImpl) InternalStats(ctx context.Context) (int, int, error) {
+	return s.shortURIRepo.UniqueCount(ctx)
+}
+
 // ================
 
 func (s *ShorterImpl) toBatchSource(source model.CorrelationUrls) (map[string]*model.ShortURI, error) {

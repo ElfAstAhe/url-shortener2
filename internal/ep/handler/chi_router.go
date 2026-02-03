@@ -28,7 +28,13 @@ type AppChiRouter struct {
 	userFacade    facade.UserFacade
 }
 
-func NewAppChiRouter(toolFacade facade.ToolFacade, shortenFacade facade.ShortenFacade, userFacade facade.UserFacade, auditIncome audit.IncomePublisher, conf *config.Config, logger logger.Logger) *AppChiRouter {
+func NewAppChiRouter(
+	toolFacade facade.ToolFacade,
+	shortenFacade facade.ShortenFacade,
+	userFacade facade.UserFacade,
+	auditIncome audit.IncomePublisher,
+	conf *config.Config, logger logger.Logger,
+) *AppChiRouter {
 	// new router
 	res := &AppChiRouter{
 		router:        chi.NewRouter(),
@@ -111,6 +117,14 @@ func (cr *AppChiRouter) setupRoutes() {
 				r.Route("/urls", func(r chi.Router) {
 					r.Get("/", cr.getAPIUserUrls)
 					r.Delete("/", cr.deleteAPIUserUrls)
+				})
+			})
+
+			// internal sub-router
+			r.Route("/internal", func(r chi.Router) {
+				// stats sub-router
+				r.Route("/stats", func(r chi.Router) {
+					r.Get("/", cr.getAPIInternalStats)
 				})
 			})
 		})

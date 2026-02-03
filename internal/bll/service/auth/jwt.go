@@ -79,10 +79,14 @@ func retrieveJWT(r *http.Request) (*jwt.Token, error) {
 		return nil, errs.NewAuthCookieInvalidError("invalid cookie", err)
 	}
 
+	return retrieveJWTFromString(cookie.Value)
+}
+
+func retrieveJWTFromString(tokenString string) (*jwt.Token, error) {
 	claims := &AppClaims{}
-	token, err := jwt.ParseWithClaims(cookie.Value, claims, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			return nil, errs.NewAuthInfoInvalidError(fmt.Sprintf("unexpected signing method: [%v]", token.Header["alg"]), nil)
 		}
 
 		return []byte(secretKey), nil
@@ -119,4 +123,13 @@ func UserInfoFromJWT(jwt *jwt.Token) (*UserInfo, error) {
 	}
 
 	return NewUserInfo(claims.Admin, claims.UserID, claims.Subject, claims.Roles), nil
+}
+
+func UserInfoFromJWTString(jwtString string) (*UserInfo, error) {
+	token, err := retrieveJWTFromString(jwtString)
+	if err != nil {
+		return nil, err
+	}
+
+	return UserInfoFromJWT(token)
 }

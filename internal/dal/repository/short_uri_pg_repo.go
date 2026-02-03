@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/ElfAstAhe/url-shortener2/internal/app/config/db"
 	"github.com/ElfAstAhe/url-shortener2/internal/bll/model"
@@ -32,6 +33,7 @@ from
             su.user_id = $1
         and su.short_uri_id = s.id`
 	listShortURIIdsByKeysSQL string = `select su.id from short_uris su where su.key = any($1)`
+	getShortURICountSQL      string = `select count(1) as cnt from short_uris`
 )
 
 type ShortURIPgRepo struct {
@@ -112,7 +114,7 @@ func (pgs *ShortURIPgRepo) GetByKeyUser(ctx context.Context, userID string, key 
 	}
 	var deleted = false
 	err := row.Scan(&result.ID, &result.OriginalURL, &result.Key, &deleted)
-	if row.Err() != nil && !errors.Is(row.Err(), sql.ErrNoRows) {
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	} else if err != nil {
 		return nil, err
@@ -303,6 +305,38 @@ func (pgs *ShortURIPgRepo) BatchDeleteByKeys(ctx context.Context, userID string,
 	}
 
 	return pgs.userRepo.DeleteAllByUnique(ctx, userID, ids)
+}
+
+func (pgs *ShortURIPgRepo) Count(ctx context.Context) (int, error) {
+	row := pgs.db.GetDB().QueryRowContext(ctx, getShortURICountSQL)
+	var res int
+	err := row.Scan(&res)
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		return 0, nil
+	} else if err != nil {
+		return 0, err
+	}
+
+	return res, nil
+}
+
+func (pgs *ShortURIPgRepo) UniqueCount(ctx context.Context) (int, int, error) {
+	eg, egCtx := errgroup.WithContext(ctx)
+	var urlCount, userCount int
+	eg.Go(func() error {
+		var urlErr error
+		urlCount, urlErr = pgs.Count(egCtx)
+
+		return urlErr
+	})
+	eg.Go(func() error {
+		var userErr error
+		userCount, userErr = pgs.userRepo.UniqueCount(egCtx)
+
+		return userErr
+	})
+
+	return urlCount, userCount, eg.Wait()
 }
 
 func (pgs *ShortURIPgRepo) internalCreate(ctx context.Context, preparedSQL *sql.Stmt, entity *model.ShortURI) (*model.ShortURI, error) {

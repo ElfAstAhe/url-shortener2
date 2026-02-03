@@ -3,6 +3,7 @@ package bootstrap
 import (
 	"context"
 	"errors"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -18,8 +19,11 @@ import (
 	"github.com/ElfAstAhe/url-shortener2/internal/bll/service/audit"
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/facade"
 	"github.com/ElfAstAhe/url-shortener2/internal/ep/handler"
+	appgrpc "github.com/ElfAstAhe/url-shortener2/internal/grpc"
 	_ "github.com/ElfAstAhe/url-shortener2/migrations/shortener"
 	"github.com/ElfAstAhe/url-shortener2/pkg/logger"
+	"golang.org/x/sync/errgroup"
+	"google.golang.org/grpc"
 )
 
 // App - структура со всеми dependency приложения
@@ -56,6 +60,12 @@ type App struct {
 	router handler.AppRouter
 	// http сервер
 	httpServer *http.Server
+	// grpc facade
+	grpcShortenFacade *appgrpc.ShortenGRPCFacade
+	// grpc service (shortener)
+	grpcService *appgrpc.ShortenGRPCService
+	// grpc сервер
+	grpcServer *grpc.Server
 }
 
 // NewApp - конструктор структуры App
@@ -130,6 +140,11 @@ func (app *App) Init() error {
 		return err
 	}
 
+	log.Info("init gRPC server")
+	if err := app.initGRPCServer(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -145,18 +160,34 @@ func (app *App) Run() error {
 	app.WG.Add(1)
 	go app.gracefulShutdown()
 
-	log.Info("start server...")
-	if err := app.launchServer(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		log.Errorf("Error starting server with error [%v]", err)
+	var eg errgroup.Group
+	log.Info("start servers...")
+	// http
+	eg.Go(func() error {
+		if err := app.launchHTTPServer(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Errorf("Error starting http server with error [%v]", err)
 
-		return err
-	}
+			return err
+		}
 
-	return nil
+		return nil
+	})
+	// gRPC
+	eg.Go(func() error {
+		if err := app.launchGRPCServer(); err != nil && !errors.Is(err, grpc.ErrServerStopped) {
+			log.Errorf("Error starting gRPC server with error [%v]", err)
+
+			return err
+		}
+
+		return nil
+	})
+
+	return eg.Wait()
 }
 
-func (app *App) launchServer() error {
-	log := app.Log.GetLogger("bootstrap server launch")
+func (app *App) launchHTTPServer() error {
+	log := app.Log.GetLogger("bootstrap http server launch")
 	if app.conf.EnableHTTPS {
 		log.Info("enable https")
 		return app.httpServer.ListenAndServeTLS("localhost.crt", "localhost.key")
@@ -165,6 +196,15 @@ func (app *App) launchServer() error {
 	log.Info("enable http")
 
 	return app.httpServer.ListenAndServe()
+}
+
+func (app *App) launchGRPCServer() error {
+	ls, err := net.Listen("tcp", ":50051")
+	if err != nil {
+		return err
+	}
+
+	return app.grpcServer.Serve(ls)
 }
 
 // Close - метод освобождения ресурсов приложения
@@ -195,8 +235,9 @@ func (app *App) Close() error {
 	return nil
 }
 
-// gracefulShutdown - внутренний метод "агрессивного" закрытия приложения (ctrl+c)
+// gracefulShutdown - внутренний метод "агрессивного" закрытия приложения (ctrl+c) + остальные сигналы OS на закрытие
 func (app *App) gracefulShutdown() {
+	defer app.WG.Done()
 	// channel
 	sig := make(chan os.Signal, 1)
 	// register channel signals
@@ -215,9 +256,12 @@ func (app *App) gracefulShutdown() {
 		}
 	}
 
+	// stop http
+	app.Log.Info("graceful shutdown http server")
 	if err := app.httpServer.Shutdown(context.Background()); err != nil {
 		app.Log.Errorf("error graceful shutdown http server with error [%v]", err)
 	}
-
-	app.WG.Done()
+	// stop gRPC
+	app.Log.Info("graceful shutdown gRPC server")
+	app.grpcServer.GracefulStop()
 }
