@@ -33,7 +33,7 @@ func (ati *AuthTrailerInterceptor) UnaryInterceptor(ctx context.Context, req int
 	var err error
 	var tokenString string
 	userInfo, err = auth.UserInfoFromContext(ctx)
-	if err != nil && userInfo != nil {
+	if err == nil && userInfo != nil {
 		tokenString, err = auth.NewJWTStringFromUserInfo(userInfo)
 		if err != nil {
 			ati.log.Warnf("has trouble build jwt token string with error [%v]", err)
